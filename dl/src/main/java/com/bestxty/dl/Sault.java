@@ -16,7 +16,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import static com.bestxty.dl.Dispatcher.HUNTER_BATCH_COMPLETE;
+import static com.bestxty.dl.Dispatcher.HUNTER_PROGRESS;
 import static com.bestxty.dl.Dispatcher.TASK_BATCH_RESUME;
+import static com.bestxty.dl.Dispatcher.TASK_EVENT;
+import static com.bestxty.dl.Utils.ProgressInformer;
+import static com.bestxty.dl.Utils.EventInformer;
+import static com.bestxty.dl.Callback.EVENT_CANCEL;
 
 /**
  * @author xty
@@ -41,11 +46,24 @@ public final class Sault {
                 }
                 case HUNTER_BATCH_COMPLETE: {
                     @SuppressWarnings("unchecked") List<TaskHunter> batch = (List<TaskHunter>) msg.obj;
-                    //noinspection ForLoopReplaceableByForEach
                     for (int i = 0, n = batch.size(); i < n; i++) {
                         TaskHunter hunter = batch.get(i);
                         hunter.getSault().complete(hunter);
                     }
+                    break;
+                }
+                case HUNTER_PROGRESS: {
+                    ProgressInformer informer = (ProgressInformer) msg.obj;
+                    informer.notifyProgress();
+                    break;
+                }
+                case TASK_EVENT: {
+                    EventInformer informer = (EventInformer) msg.obj;
+                    if (informer.event == EVENT_CANCEL) {
+                        Task task = informer.task;
+                        task.getSault().cancelTask(task);
+                    }
+                    informer.notifyEvent();
                     break;
                 }
             }
@@ -74,31 +92,53 @@ public final class Sault {
         return saveDir;
     }
 
+    public Stats getStats() {
+        Stats stats = dispatcher.getStats();
+        stats.taskSize = taskMap.size();
+        return stats;
+    }
+
+    private void cancelTask(Task task) {
+        taskMap.remove(task.getTag());
+    }
+
     private void resumeTask(Task task) {
-        submit(task);
+        Callback callback = task.getCallback();
+        if (callback != null) {
+            callback.onEvent(task.getTag(), Callback.EVENT_RESUME);
+        }
+        enqueueAndSubmit(task);
     }
 
     private void complete(TaskHunter hunter) {
         Log.d(TAG, "complete() called with: hunter = [" + hunter + "]");
         Task single = hunter.getTask();
         taskMap.remove(single.getTag());
+        Callback callback = single.getCallback();
+        if (callback != null) {
+            callback.onEvent(single.getTag(), Callback.EVENT_COMPLETE);
+            callback.onComplete(single.getTag(), single.getTarget().getAbsolutePath());
+        }
     }
 
     void enqueueAndSubmit(Task task) {
+        System.out.println("enqueue and submit task.task=" + task.getKey());
         Task source = taskMap.get(task.getTag());
 
-        if (source != null && source != task) {
-            // TODO: 2016/12/9 cancel already task
+        if (source == null) {
             taskMap.put(task.getTag(), task);
+            System.out.println("put task to task map");
         }
         submit(task);
     }
 
     void submit(Task task) {
+        System.out.println("submit task. task=" + task.getKey());
         dispatcher.dispatchSubmit(task);
     }
 
     public TaskBuilder load(String url) {
+        System.out.println("load task from url:" + url);
         return new TaskBuilder(this, Uri.parse(url));
     }
 
@@ -112,8 +152,11 @@ public final class Sault {
 
     public void cancel(Object tag) {
         Task task = taskMap.get(tag);
-        if (task != null)
+        if (task != null) {
             dispatcher.dispatchCancel(task);
+        } else {
+            System.out.println("not found need cancel task.");
+        }
     }
 
     public void shutdown() {
@@ -128,10 +171,12 @@ public final class Sault {
         private Context context;
 
         public Builder(Context context) {
+            System.out.println("create sault builder.");
             this.context = context;
         }
 
         public Builder saveDir(String saveDir) {
+            System.out.println("set default file save dir. saveDir=" + saveDir);
             return saveDir(new File(saveDir));
         }
 
@@ -141,10 +186,13 @@ public final class Sault {
         }
 
         public Sault build() {
+            System.out.println("build sault");
             if (service == null) {
+                System.out.println("not set executor service ,create default sault executor service.");
                 service = new SaultExecutorService();
             }
             if (downloader == null) {
+                System.out.println("not set downloader ,create default okhttp downloader.");
                 downloader = new OkHttpDownloader();
             }
             Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader);

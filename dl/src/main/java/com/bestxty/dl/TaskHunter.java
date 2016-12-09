@@ -16,6 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.bestxty.dl.Sault.Priority;
 import static com.bestxty.dl.Utils.THREAD_IDLE_NAME;
+import static com.bestxty.dl.Utils.ProgressInformer;
+import static com.bestxty.dl.Downloader.Response;
+import static com.bestxty.dl.Downloader.ResponseException;
+import static com.bestxty.dl.Downloader.ContentLengthException;
 
 /**
  * @author xty
@@ -60,6 +64,7 @@ class TaskHunter implements Runnable {
     @SuppressWarnings("TryWithIdenticalCatches")
     @Override
     public void run() {
+        System.out.println("hunter running");
 
         try {
             result = hunt();
@@ -69,18 +74,23 @@ class TaskHunter implements Runnable {
                 dispatcher.dispatchComplete(this);
             }
         } catch (InterruptedIOException e) {
+            e.printStackTrace();
             exception = e;
             dispatcher.dispatchFailed(this);
-        } catch (Downloader.ResponseException e) {
+        } catch (ResponseException e) {
+            e.printStackTrace();
             exception = e;
             dispatcher.dispatchFailed(this);
-        } catch (Downloader.ContentLengthException e) {
+        } catch (ContentLengthException e) {
+            e.printStackTrace();
             exception = e;
             dispatcher.dispatchRetry(this);
         } catch (IOException e) {
+            e.printStackTrace();
             exception = e;
             dispatcher.dispatchRetry(this);
         } catch (Exception e) {
+            e.printStackTrace();
             exception = e;
             dispatcher.dispatchFailed(this);
         } finally {
@@ -89,29 +99,31 @@ class TaskHunter implements Runnable {
     }
 
     private File hunt() throws IOException {
-        Downloader.Response response = downloader.load(task.getUri());
+
+        Response response = downloader.load(task.getUri());
 
         InputStream stream = response.stream;
         if (stream == null) {
+            System.out.println("stream is null");
             return null;
         }
 
         if (response.contentLength == 0) {
             closeQuietly(stream);
-            throw new Downloader.ContentLengthException("Received response with 0 content-length header.");
+            throw new ContentLengthException("Received response with 0 content-length header.");
         }
         try {
 
             FileOutputStream output = openOutputStream(task.getTarget());
-//            Progress progress = new Progress(task.getTag(), task.getCallback());
-//            progress.totalSize = response.contentLength;
+            ProgressInformer progress = new ProgressInformer(task.getTag(), task.getCallback());
+            progress.totalSize = response.contentLength;
             try {
                 byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
                 int n = 0;
                 while (EOF != (n = stream.read(buffer))) {
                     output.write(buffer, 0, n);
-//                    progress.finishedSize += n;
-//                    dispatcher.dispatchProgress(progress);
+                    progress.finishedSize += n;
+                    dispatcher.dispatchProgress(progress);
                 }
 
                 output.close(); // don't swallow close Exception if copy completes normally

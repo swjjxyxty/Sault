@@ -10,6 +10,7 @@ public interface Callback {
     int EVENT_PAUSE = 2;
     int EVENT_RESUME = 3;
     int EVENT_CANCEL = 4;
+    int EVENT_COMPLETE = 5;
 
     void onEvent(Object tag, int event);
 

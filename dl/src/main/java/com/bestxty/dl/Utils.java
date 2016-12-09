@@ -30,24 +30,57 @@ final class Utils {
         return context.checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
     }
 
-    static class EventInformer {
+    static class ProgressInformer {
         Object tag;
-        int event;
+        long totalSize;
+        long finishedSize;
         private Callback callback;
 
-        EventInformer(Object tag, int event, Callback callback) {
+        ProgressInformer(Object tag,
+                         Callback callback) {
             this.tag = tag;
+            this.callback = callback;
+        }
+
+
+        private ProgressInformer(ProgressInformer informer) {
+            this.tag = informer.tag;
+            this.totalSize = informer.totalSize;
+            this.finishedSize = informer.finishedSize;
+            this.callback = informer.callback;
+        }
+
+        static ProgressInformer from(ProgressInformer informer) {
+            return new ProgressInformer(informer);
+        }
+
+
+        void notifyProgress() {
+            if (callback != null) {
+                callback.onProgress(tag, totalSize, finishedSize);
+            }
+        }
+    }
+
+
+    static class EventInformer {
+        int event;
+        Task task;
+        private Callback callback;
+
+        EventInformer(Task task, int event, Callback callback) {
+            this.task = task;
             this.event = event;
             this.callback = callback;
         }
 
         static EventInformer fromTask(Task task, int event) {
-            return new EventInformer(task.getTag(), event, task.getCallback());
+            return new EventInformer(task, event, task.getCallback());
         }
 
         void notifyEvent() {
             if (callback != null) {
-                callback.onEvent(tag, event);
+                callback.onEvent(task.getTag(), event);
             }
         }
     }

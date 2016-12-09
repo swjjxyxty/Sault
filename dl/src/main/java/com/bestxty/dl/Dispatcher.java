@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +25,7 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static com.bestxty.dl.Utils.DISPATCHER_THREAD_NAME;
 import static com.bestxty.dl.Utils.THREAD_PREFIX;
 import static com.bestxty.dl.Utils.EventInformer;
+import static com.bestxty.dl.Utils.ProgressInformer;
 import static com.bestxty.dl.Callback.*;
 import static com.bestxty.dl.Utils.getService;
 import static com.bestxty.dl.Utils.hasPermission;
@@ -45,6 +47,7 @@ class Dispatcher {
     static final int TASK_BATCH_RESUME = 9;
     static final int HUNTER_DELAY_NEXT_BATCH = 10;
     static final int HUNTER_BATCH_COMPLETE = 11;
+    static final int HUNTER_PROGRESS = 12;
 
     private static final int BATCH_DELAY = 200; // ms
     private static final int RETRY_DELAY = 500;
@@ -63,10 +66,10 @@ class Dispatcher {
     private final Context context;
     private boolean airplaneMode;
 
-    public Dispatcher(Context context,
-                      ExecutorService service,
-                      Handler mainThreadHandler,
-                      Downloader downloader) {
+    Dispatcher(Context context,
+               ExecutorService service,
+               Handler mainThreadHandler,
+               Downloader downloader) {
         this.context = context;
         this.service = service;
         this.mainThreadHandler = mainThreadHandler;
@@ -98,19 +101,43 @@ class Dispatcher {
 //        });
     }
 
+
+    Stats getStats() {
+        Stats stats = new Stats();
+        stats.hunterMapSize = hunterMap.size();
+        stats.batchSize = batch.size();
+        stats.failedTaskSize = failedTaskMap.size();
+        stats.pausedTagSize = pausedTags.size();
+        stats.pausedTaskSize = pausedTaskMap.size();
+        return stats;
+    }
+
     private void dispatchEvent(EventInformer eventInformer) {
+        System.out.println("dispatch event." + eventInformer.event);
         mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(TASK_EVENT, eventInformer));
     }
 
+    void dispatchProgress(ProgressInformer progressInformer) {
+        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(HUNTER_PROGRESS,
+                ProgressInformer.from(progressInformer)));
+    }
+
     void dispatchSubmit(Task task) {
+        System.out.println("dispatch submit.task=" + task.getKey());
         handler.sendMessage(handler.obtainMessage(TASK_SUBMIT, task));
     }
 
     void dispatchPauseTag(Object tag) {
+        System.out.println(String.format(Locale.CHINA, "dispatch pause. paused size=%d,paused tag=%d,failed size=%d,hunter size=%d.",
+                pausedTaskMap.size(),
+                pausedTags.size(),
+                failedTaskMap.size(),
+                hunterMap.size()));
         handler.sendMessage(handler.obtainMessage(TASK_PAUSE, tag));
     }
 
     void dispatchCancel(Task task) {
+        System.out.println("dispatch cancel.");
         handler.sendMessage(handler.obtainMessage(TASK_CANCEL, task));
     }
 
@@ -123,18 +150,24 @@ class Dispatcher {
     }
 
     void dispatchFailed(TaskHunter hunter) {
+        System.out.println("dispatch task failed. ex=" + hunter.getException().getMessage());
+        hunter.getException().printStackTrace();
         handler.sendMessage(handler.obtainMessage(HUNTER_FAILED, hunter));
     }
 
     void dispatchRetry(TaskHunter hunter) {
+        System.out.println("dispatch task retry.ex=" + hunter.getException().getMessage());
+        hunter.getException().printStackTrace();
         handler.sendMessageDelayed(handler.obtainMessage(HUNTER_RETRY, hunter), RETRY_DELAY);
     }
 
 
     private void performSubmit(Task task) {
+        System.out.println("perform submit task,task=" + task.getKey());
         TaskHunter hunter = new TaskHunter(task.getSault(), this, task, downloader);
         hunter.future = service.submit(hunter);
         hunterMap.put(hunter.getKey(), hunter);
+        System.out.println("put hunter to hunter map. size=" + hunterMap.size());
         dispatchEvent(EventInformer.fromTask(task, EVENT_START));
     }
 
@@ -161,6 +194,7 @@ class Dispatcher {
                     iterator.remove();
                     System.out.println("put task to paused task map");
                     pausedTaskMap.put(single.getKey(), single);
+                    dispatchEvent(EventInformer.fromTask(single, EVENT_PAUSE));
                 }
             }
         }
@@ -195,29 +229,36 @@ class Dispatcher {
 
     @SuppressWarnings("SuspiciousMethodCalls")
     private void performCancel(Task task) {
+        System.out.println("perform cancel.");
         String key = task.getKey();
         TaskHunter hunter = hunterMap.get(key);
         if (hunter != null) {
+            System.out.println("find hunter");
             hunter.detach(task);
             if (hunter.cancel()) {
-                hunterMap.remove(hunter);
+                System.out.println("cancel hunter");
+                dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
+                hunterMap.remove(key);
             }
         }
 
         if (pausedTags.contains(task.getTag())) {
-            pausedTaskMap.remove(task);
+            System.out.println("paused tags contain task");
+            pausedTaskMap.remove(key);
             pausedTags.remove(task.getTag());
+            dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
         }
 
-        Task remove = failedTaskMap.remove(task);
+        Task remove = failedTaskMap.remove(key);
         if (remove != null) {
             System.out.println("task removed from failed task map");
+            dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
         }
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
     private void performComplete(TaskHunter hunter) {
-        hunterMap.remove(hunter);
+        hunterMap.remove(hunter.getKey());
         batch(hunter);
     }
 
