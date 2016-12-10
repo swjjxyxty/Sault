@@ -16,11 +16,13 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import static com.bestxty.dl.Dispatcher.HUNTER_BATCH_COMPLETE;
+import static com.bestxty.dl.Dispatcher.HUNTER_EROOR;
 import static com.bestxty.dl.Dispatcher.HUNTER_PROGRESS;
 import static com.bestxty.dl.Dispatcher.TASK_BATCH_RESUME;
 import static com.bestxty.dl.Dispatcher.TASK_EVENT;
 import static com.bestxty.dl.Utils.ProgressInformer;
 import static com.bestxty.dl.Utils.EventInformer;
+import static com.bestxty.dl.Utils.ErrorInformer;
 import static com.bestxty.dl.Callback.EVENT_CANCEL;
 
 /**
@@ -64,6 +66,11 @@ public final class Sault {
                         task.getSault().cancelTask(task);
                     }
                     informer.notifyEvent();
+                    break;
+                }
+                case HUNTER_EROOR: {
+                    ErrorInformer informer = (ErrorInformer) msg.obj;
+                    informer.notifyError();
                     break;
                 }
             }

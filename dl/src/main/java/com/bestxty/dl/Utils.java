@@ -6,6 +6,8 @@ import android.os.Process;
 
 import java.util.concurrent.ThreadFactory;
 
+import okhttp3.Call;
+
 /**
  * @author xty
  *         Created by xty on 2016/12/9.
@@ -29,6 +31,27 @@ final class Utils {
     static boolean hasPermission(Context context, String permission) {
         return context.checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
     }
+
+    static class ErrorInformer {
+        private Callback callback;
+        private DownloadException exception;
+
+        ErrorInformer(DownloadException exception, Callback callback) {
+            this.exception = exception;
+            this.callback = callback;
+        }
+
+        static ErrorInformer fromTask(Callback callback, DownloadException exception) {
+            return new ErrorInformer(exception, callback);
+        }
+
+        void notifyError() {
+            if (callback != null) {
+                callback.onError(exception);
+            }
+        }
+    }
+
 
     static class ProgressInformer {
         Object tag;

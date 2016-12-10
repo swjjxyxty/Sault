@@ -10,7 +10,7 @@ import android.os.Parcelable;
 public class DownloadException extends RuntimeException implements Parcelable {
 
 
-    private String tag;
+    private String key;
 
     private String url;
 
@@ -19,16 +19,23 @@ public class DownloadException extends RuntimeException implements Parcelable {
     public DownloadException() {
     }
 
-    public DownloadException(String tag, String url, String reason) {
-        this.tag = tag;
+    public DownloadException(String key, String url, String reason) {
+        this.key = key;
         this.url = url;
         this.reason = reason;
     }
 
 
-    public DownloadException(String tag, String url, String reason, Throwable throwable) {
+    public DownloadException(String key, String url, Throwable throwable) {
         super(throwable);
-        this.tag = tag;
+        this.key = key;
+        this.url = url;
+    }
+
+
+    public DownloadException(String key, String url, String reason, Throwable throwable) {
+        super(throwable);
+        this.key = key;
         this.url = url;
         this.reason = reason;
     }
@@ -37,8 +44,8 @@ public class DownloadException extends RuntimeException implements Parcelable {
         return reason;
     }
 
-    public String getTag() {
-        return tag;
+    public String getKey() {
+        return key;
     }
 
     public String getUrl() {
@@ -47,7 +54,7 @@ public class DownloadException extends RuntimeException implements Parcelable {
 
     @Override
     public String getMessage() {
-        return "download failed for :" + tag + "," + url + "," + reason;
+        return "download failed for :" + key + "," + url + "," + reason;
     }
 
     @Override
@@ -57,11 +64,10 @@ public class DownloadException extends RuntimeException implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.tag);
+        dest.writeString(this.key);
         dest.writeString(this.url);
         dest.writeString(this.reason);
     }
-
 
 
     @SuppressWarnings("WeakerAccess")
@@ -70,7 +76,7 @@ public class DownloadException extends RuntimeException implements Parcelable {
     }
 
     protected DownloadException(Parcel in) {
-        this.tag = in.readString();
+        this.key = in.readString();
         this.url = in.readString();
         this.reason = in.readString();
     }

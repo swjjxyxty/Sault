@@ -25,6 +25,7 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static com.bestxty.dl.Utils.DISPATCHER_THREAD_NAME;
 import static com.bestxty.dl.Utils.THREAD_PREFIX;
 import static com.bestxty.dl.Utils.EventInformer;
+import static com.bestxty.dl.Utils.ErrorInformer;
 import static com.bestxty.dl.Utils.ProgressInformer;
 import static com.bestxty.dl.Callback.*;
 import static com.bestxty.dl.Utils.getService;
@@ -48,6 +49,7 @@ class Dispatcher {
     static final int HUNTER_DELAY_NEXT_BATCH = 10;
     static final int HUNTER_BATCH_COMPLETE = 11;
     static final int HUNTER_PROGRESS = 12;
+    static final int HUNTER_EROOR = 13;
 
     private static final int BATCH_DELAY = 200; // ms
     private static final int RETRY_DELAY = 500;
@@ -110,6 +112,10 @@ class Dispatcher {
         stats.pausedTagSize = pausedTags.size();
         stats.pausedTaskSize = pausedTaskMap.size();
         return stats;
+    }
+
+    private void dispatchError(ErrorInformer errorInformer) {
+        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(HUNTER_EROOR, errorInformer));
     }
 
     private void dispatchEvent(EventInformer eventInformer) {
@@ -309,6 +315,10 @@ class Dispatcher {
 
     private void performError(TaskHunter hunter) {
         hunterMap.remove(hunter.getKey());
+        dispatchError(ErrorInformer.fromTask(hunter.getTask().getCallback(),
+                new DownloadException(hunter.getKey(),
+                        hunter.getTask().getUri().toString(),
+                        hunter.getException())));
         batch(hunter);
     }
 
