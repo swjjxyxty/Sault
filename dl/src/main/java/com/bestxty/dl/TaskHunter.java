@@ -6,20 +6,20 @@ import android.util.Log;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.bestxty.dl.Sault.Priority;
-import static com.bestxty.dl.Utils.THREAD_IDLE_NAME;
-import static com.bestxty.dl.Utils.ProgressInformer;
+import static com.bestxty.dl.Downloader.ContentLengthException;
 import static com.bestxty.dl.Downloader.Response;
 import static com.bestxty.dl.Downloader.ResponseException;
-import static com.bestxty.dl.Downloader.ContentLengthException;
+import static com.bestxty.dl.Sault.Priority;
+import static com.bestxty.dl.Utils.ProgressInformer;
+import static com.bestxty.dl.Utils.THREAD_IDLE_NAME;
 
 /**
  * @author xty
@@ -44,12 +44,15 @@ class TaskHunter implements Runnable {
 
     Future<?> future;
 
-    Exception exception;
+    private Exception exception;
 
-    File result;
-    int retryCount;
 
-    public TaskHunter(Sault sault, Dispatcher dispatcher, Task task, Downloader downloader) {
+    private int retryCount;
+
+    TaskHunter(Sault sault,
+               Dispatcher dispatcher,
+               Task task,
+               Downloader downloader) {
         this.sault = sault;
         this.dispatcher = dispatcher;
         this.task = task;
@@ -67,7 +70,7 @@ class TaskHunter implements Runnable {
         System.out.println("hunter running");
 
         try {
-            result = hunt();
+            File result = hunt();
             if (result == null) {
                 dispatcher.dispatchFailed(this);
             } else {
@@ -100,7 +103,11 @@ class TaskHunter implements Runnable {
 
     private File hunt() throws IOException {
 
-        Response response = downloader.load(task.getUri());
+        boolean needResume = task.finishedSize != 0
+                && downloader.supportBreakPoint();
+
+        Response response = needResume ? downloader.load(task.getUri(), task.finishedSize)
+                : downloader.load(task.getUri());
 
         InputStream stream = response.stream;
         if (stream == null) {
@@ -113,16 +120,27 @@ class TaskHunter implements Runnable {
             throw new ContentLengthException("Received response with 0 content-length header.");
         }
         try {
+            createTargetFile(task.getTarget());
 
-            FileOutputStream output = openOutputStream(task.getTarget());
+            RandomAccessFile output = new RandomAccessFile(task.getTarget(), "rw");
+
             ProgressInformer progress = new ProgressInformer(task.getTag(), task.getCallback());
-            progress.totalSize = response.contentLength;
+
+            if (needResume) {
+                output.seek(task.finishedSize);
+                progress.totalSize = task.totalSize;
+            } else {
+                progress.totalSize = response.contentLength;
+                task.totalSize = response.contentLength;
+            }
+
             try {
                 byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-                int n = 0;
-                while (EOF != (n = stream.read(buffer))) {
-                    output.write(buffer, 0, n);
-                    progress.finishedSize += n;
+                int length;
+                while (EOF != (length = stream.read(buffer))) {
+                    output.write(buffer, 0, length);
+                    task.finishedSize += length;
+                    progress.finishedSize = task.finishedSize;
                     dispatcher.dispatchProgress(progress);
                 }
 
@@ -133,7 +151,8 @@ class TaskHunter implements Runnable {
         } finally {
             closeQuietly(stream);
         }
-        Log.d("TaskHunter", task.getTarget().getAbsolutePath());
+
+        task.endTime = System.nanoTime();
 
         return task.getTarget();
     }
@@ -201,11 +220,6 @@ class TaskHunter implements Runnable {
         return priority;
     }
 
-
-    private static void closeQuietly(OutputStream output) {
-        closeQuietly((Closeable) output);
-    }
-
     private static void closeQuietly(Closeable closeable) {
         try {
             if (closeable != null) {
@@ -217,12 +231,7 @@ class TaskHunter implements Runnable {
     }
 
 
-    private static FileOutputStream openOutputStream(File file) throws IOException {
-        return openOutputStream(file, false);
-    }
-
-
-    private static FileOutputStream openOutputStream(File file, boolean append) throws IOException {
+    private static void createTargetFile(File file) throws IOException {
         if (file.exists()) {
             if (file.isDirectory()) {
                 throw new IOException("File '" + file + "' exists but is a directory");
@@ -238,6 +247,5 @@ class TaskHunter implements Runnable {
                 }
             }
         }
-        return new FileOutputStream(file, append);
     }
 }

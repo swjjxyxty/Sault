@@ -14,7 +14,7 @@ import okhttp3.ResponseBody;
  * @author xty
  *         Created by xty on 2016/12/7.
  */
-class OkHttpDownloader implements Downloader {
+public class OkHttpDownloader implements Downloader {
 
     private static OkHttpClient defaultOkHttpClient() {
         return new OkHttpClient.Builder()
@@ -26,20 +26,24 @@ class OkHttpDownloader implements Downloader {
 
     private final OkHttpClient client;
 
-    OkHttpDownloader() {
+    public OkHttpDownloader() {
         this(defaultOkHttpClient());
     }
 
-    OkHttpDownloader(OkHttpClient client) {
+    public OkHttpDownloader(OkHttpClient client) {
         this.client = client;
+    }
+
+
+    private okhttp3.Response internalCall(Request request) throws IOException {
+        return client.newCall(request).execute();
     }
 
     @Override
     public Response load(Uri uri) throws IOException {
-        okhttp3.Response response = client.newCall(new Request.Builder()
+        okhttp3.Response response = internalCall(new Request.Builder()
                 .url(uri.toString())
-                .build())
-                .execute();
+                .build());
 
         if (!response.isSuccessful()) {
             response.body().close();
@@ -51,6 +55,27 @@ class OkHttpDownloader implements Downloader {
         return new Response(body.byteStream(), body.contentLength());
     }
 
+    @Override
+    public Response load(Uri uri, long startPosition) throws IOException {
+        okhttp3.Response response = internalCall(new Request.Builder()
+                .header("Range", "bytes=" + startPosition + "-")
+                .url(uri.toString())
+                .build());
+
+        if (!response.isSuccessful()) {
+            response.body().close();
+            throw new ResponseException(response.code() + " " + response.message(), response.code());
+        }
+
+        ResponseBody body = response.body();
+
+        return new Response(body.byteStream(), body.contentLength());
+    }
+
+    @Override
+    public boolean supportBreakPoint() {
+        return true;
+    }
 
     @Override
     public boolean shouldRetry(boolean airplaneMode, NetworkInfo info) {

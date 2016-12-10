@@ -14,6 +14,8 @@ final class Task {
     int id;
     long startTime;
     long endTime;
+    long finishedSize;
+    long totalSize;
     private final Object tag;
     private final File target;
     private final Callback callback;
@@ -22,8 +24,8 @@ final class Task {
     private final String key;
     private final Sault sault;
 
-    public Task(Sault sault, String key, Uri uri, File target, Object tag, Priority priority,
-                Callback callback) {
+    Task(Sault sault, String key, Uri uri, File target, Object tag, Priority priority,
+         Callback callback) {
         this.sault = sault;
         this.key = key;
         this.uri = uri;

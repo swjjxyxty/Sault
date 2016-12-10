@@ -2,7 +2,6 @@ package com.bestxty.dl;
 
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,15 +14,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+import static com.bestxty.dl.Callback.EVENT_CANCEL;
 import static com.bestxty.dl.Dispatcher.HUNTER_BATCH_COMPLETE;
-import static com.bestxty.dl.Dispatcher.HUNTER_EROOR;
+import static com.bestxty.dl.Dispatcher.HUNTER_ERROR;
 import static com.bestxty.dl.Dispatcher.HUNTER_PROGRESS;
 import static com.bestxty.dl.Dispatcher.TASK_BATCH_RESUME;
 import static com.bestxty.dl.Dispatcher.TASK_EVENT;
-import static com.bestxty.dl.Utils.ProgressInformer;
-import static com.bestxty.dl.Utils.EventInformer;
 import static com.bestxty.dl.Utils.ErrorInformer;
-import static com.bestxty.dl.Callback.EVENT_CANCEL;
+import static com.bestxty.dl.Utils.EventInformer;
+import static com.bestxty.dl.Utils.ProgressInformer;
 
 /**
  * @author xty
@@ -68,7 +67,7 @@ public final class Sault {
                     informer.notifyEvent();
                     break;
                 }
-                case HUNTER_EROOR: {
+                case HUNTER_ERROR: {
                     ErrorInformer informer = (ErrorInformer) msg.obj;
                     informer.notifyError();
                     break;
@@ -189,6 +188,16 @@ public final class Sault {
 
         public Builder saveDir(File saveDir) {
             this.saveDir = saveDir;
+            return this;
+        }
+
+        public Builder downloader(Downloader downloader) {
+            this.downloader = downloader;
+            return this;
+        }
+
+        public Builder executor(ExecutorService service) {
+            this.service = service;
             return this;
         }
 

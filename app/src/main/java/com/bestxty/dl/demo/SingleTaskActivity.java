@@ -3,7 +3,6 @@ package com.bestxty.dl.demo;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -11,18 +10,20 @@ import android.widget.ProgressBar;
 
 import com.bestxty.dl.Callback;
 import com.bestxty.dl.DownloadException;
+import com.bestxty.dl.OkHttpDownloader;
 import com.bestxty.dl.Sault;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 public class SingleTaskActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "SingleTaskActivity";
 
     private Button startBtn;
-    private Button puaseBtn;
+    private Button pauseBtn;
     private Button resumeBtn;
     private Button cancelBtn;
     private ProgressBar progressBar;
@@ -37,20 +38,26 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
         setContentView(R.layout.activity_single_task);
         progressBar = (ProgressBar) findViewById(R.id.pb_progress);
         startBtn = (Button) findViewById(R.id.btn_start);
-        puaseBtn = (Button) findViewById(R.id.btn_pause);
+        pauseBtn = (Button) findViewById(R.id.btn_pause);
         resumeBtn = (Button) findViewById(R.id.btn_resume);
         cancelBtn = (Button) findViewById(R.id.btn_cancel);
 
         startBtn.setOnClickListener(this);
-        puaseBtn.setOnClickListener(this);
+        pauseBtn.setOnClickListener(this);
         resumeBtn.setOnClickListener(this);
         cancelBtn.setOnClickListener(this);
 
 
         enableStartBtn();
 
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
+
         sault = new Sault.Builder(this)
                 .saveDir(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "dl_test")
+                .downloader(new OkHttpDownloader(new OkHttpClient.Builder()
+                        .addInterceptor(loggingInterceptor)
+                        .build()))
                 .build();
 
     }
@@ -131,21 +138,21 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
 
     private void enableResumeBtn() {
         startBtn.setEnabled(false);
-        puaseBtn.setEnabled(false);
+        pauseBtn.setEnabled(false);
         resumeBtn.setEnabled(true);
         cancelBtn.setEnabled(false);
     }
 
     private void enablePauseAndCancelBtn() {
         startBtn.setEnabled(false);
-        puaseBtn.setEnabled(true);
+        pauseBtn.setEnabled(true);
         resumeBtn.setEnabled(false);
         cancelBtn.setEnabled(true);
     }
 
     private void enableStartBtn() {
         startBtn.setEnabled(true);
-        puaseBtn.setEnabled(false);
+        pauseBtn.setEnabled(false);
         resumeBtn.setEnabled(false);
         cancelBtn.setEnabled(false);
     }

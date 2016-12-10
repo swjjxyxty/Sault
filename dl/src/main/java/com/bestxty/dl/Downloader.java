@@ -13,9 +13,13 @@ import java.io.InputStream;
 public interface Downloader {
     Response load(Uri uri) throws IOException;
 
+    Response load(Uri uri, long startPosition) throws IOException;
+
     boolean shouldRetry(boolean airplaneMode, NetworkInfo info);
 
     boolean supportsReplay();
+
+    boolean supportBreakPoint();
 
     int getRetryCount();
 

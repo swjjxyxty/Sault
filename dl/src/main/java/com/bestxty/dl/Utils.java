@@ -1,12 +1,15 @@
 package com.bestxty.dl;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Process;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 
 import java.util.concurrent.ThreadFactory;
 
-import okhttp3.Call;
+import static android.provider.Settings.System.AIRPLANE_MODE_ON;
 
 /**
  * @author xty
@@ -22,6 +25,17 @@ final class Utils {
     static final int DEFAULT_READ_TIMEOUT_MILLIS = 20 * 1000; // 20s
     static final int DEFAULT_WRITE_TIMEOUT_MILLIS = 20 * 1000; // 20s
     static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 15 * 1000; // 15s
+
+
+    static boolean isAirplaneModeOn(Context context) {
+        ContentResolver contentResolver = context.getContentResolver();
+        try {
+            return Settings.System.getInt(contentResolver, AIRPLANE_MODE_ON, 0) != 0;
+        } catch (NullPointerException e) {
+            return false;
+        }
+    }
+
 
     @SuppressWarnings("unchecked")
     static <T> T getService(Context context, String service) {
@@ -110,7 +124,7 @@ final class Utils {
 
     static class DownloadThreadFactory implements ThreadFactory {
         @Override
-        public Thread newThread(Runnable r) {
+        public Thread newThread(@NonNull Runnable r) {
             return new DownloadThread(r);
         }
     }

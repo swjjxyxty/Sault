@@ -1,7 +1,10 @@
 package com.bestxty.dl;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
@@ -21,13 +24,17 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
+import static android.content.Intent.ACTION_AIRPLANE_MODE_CHANGED;
+import static android.net.ConnectivityManager.CONNECTIVITY_ACTION;
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+import static com.bestxty.dl.Callback.EVENT_CANCEL;
+import static com.bestxty.dl.Callback.EVENT_PAUSE;
+import static com.bestxty.dl.Callback.EVENT_START;
 import static com.bestxty.dl.Utils.DISPATCHER_THREAD_NAME;
-import static com.bestxty.dl.Utils.THREAD_PREFIX;
-import static com.bestxty.dl.Utils.EventInformer;
 import static com.bestxty.dl.Utils.ErrorInformer;
+import static com.bestxty.dl.Utils.EventInformer;
 import static com.bestxty.dl.Utils.ProgressInformer;
-import static com.bestxty.dl.Callback.*;
+import static com.bestxty.dl.Utils.THREAD_PREFIX;
 import static com.bestxty.dl.Utils.getService;
 import static com.bestxty.dl.Utils.hasPermission;
 
@@ -35,6 +42,7 @@ import static com.bestxty.dl.Utils.hasPermission;
  * @author xty
  *         Created by xty on 2016/12/9.
  */
+@SuppressWarnings("WeakerAccess")
 class Dispatcher {
 
     static final int TASK_SUBMIT = 1;
@@ -49,10 +57,16 @@ class Dispatcher {
     static final int HUNTER_DELAY_NEXT_BATCH = 10;
     static final int HUNTER_BATCH_COMPLETE = 11;
     static final int HUNTER_PROGRESS = 12;
-    static final int HUNTER_EROOR = 13;
+    static final int HUNTER_ERROR = 13;
+    static final int NETWORK_STATE_CHANGE = 14;
+    static final int AIRPLANE_MODE_CHANGE = 15;
 
     private static final int BATCH_DELAY = 200; // ms
     private static final int RETRY_DELAY = 500;
+
+
+    private static final int AIRPLANE_MODE_ON = 1;
+    private static final int AIRPLANE_MODE_OFF = 0;
 
     private final ExecutorService service;
     private final DispatcherThread dispatcherThread;
@@ -64,6 +78,8 @@ class Dispatcher {
     private final Downloader downloader;
     private final Set<Object> pausedTags;
     private final List<TaskHunter> batch;
+
+    private final NetworkBroadcastReceiver receiver;
     private final boolean scansNetworkChanges;
     private final Context context;
     private boolean airplaneMode;
@@ -84,8 +100,10 @@ class Dispatcher {
         this.failedTaskMap = new HashMap<>();
         this.pausedTags = new HashSet<>();
         this.batch = new ArrayList<>(4);
+        this.airplaneMode = Utils.isAirplaneModeOn(this.context);
         this.scansNetworkChanges = hasPermission(context, Manifest.permission.ACCESS_NETWORK_STATE);
-
+        this.receiver = new NetworkBroadcastReceiver(this);
+        receiver.register();
     }
 
 
@@ -96,11 +114,12 @@ class Dispatcher {
         }
         dispatcherThread.quit();
 //         Unregister network broadcast receiver on the main thread.
-//        Picasso.HANDLER.post(new Runnable() {
-//            @Override public void run() {
-//                receiver.unregister();
-//            }
-//        });
+        Sault.HANDLER.post(new Runnable() {
+            @Override
+            public void run() {
+                receiver.unregister();
+            }
+        });
     }
 
 
@@ -115,7 +134,7 @@ class Dispatcher {
     }
 
     private void dispatchError(ErrorInformer errorInformer) {
-        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(HUNTER_EROOR, errorInformer));
+        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(HUNTER_ERROR, errorInformer));
     }
 
     private void dispatchEvent(EventInformer eventInformer) {
@@ -167,6 +186,14 @@ class Dispatcher {
         handler.sendMessageDelayed(handler.obtainMessage(HUNTER_RETRY, hunter), RETRY_DELAY);
     }
 
+    private void dispatchNetworkStateChange(NetworkInfo info) {
+        handler.sendMessage(handler.obtainMessage(NETWORK_STATE_CHANGE, info));
+    }
+
+    private void dispatchAirplaneModeChange(boolean airplaneMode) {
+        handler.sendMessage(handler.obtainMessage(AIRPLANE_MODE_CHANGE,
+                airplaneMode ? AIRPLANE_MODE_ON : AIRPLANE_MODE_OFF, 0));
+    }
 
     private void performSubmit(Task task) {
         System.out.println("perform submit task,task=" + task.getKey());
@@ -322,6 +349,22 @@ class Dispatcher {
         batch(hunter);
     }
 
+
+    private void performAirplaneModeChange(boolean airplaneMode) {
+        this.airplaneMode = airplaneMode;
+    }
+
+    private void performNetworkStateChange(NetworkInfo info) {
+        if (service instanceof SaultExecutorService) {
+            ((SaultExecutorService) service).adjustThreadCount(info);
+        }
+        // Intentionally check only if isConnected() here before we flush out failed actions.
+        if (info != null && info.isConnected()) {
+//            flushFailedActions();
+        }
+    }
+
+
     private void batch(TaskHunter hunter) {
         if (hunter.isCancelled()) {
             return;
@@ -341,7 +384,7 @@ class Dispatcher {
         }
 
         @Override
-        public void handleMessage(Message msg) {
+        public void handleMessage(final Message msg) {
             switch (msg.what) {
                 case TASK_SUBMIT: {
                     Task task = (Task) msg.obj;
@@ -382,6 +425,23 @@ class Dispatcher {
                     dispatcher.performBatchComplete();
                     break;
                 }
+
+                case NETWORK_STATE_CHANGE: {
+                    NetworkInfo info = (NetworkInfo) msg.obj;
+                    dispatcher.performNetworkStateChange(info);
+                    break;
+                }
+                case AIRPLANE_MODE_CHANGE: {
+                    dispatcher.performAirplaneModeChange(msg.arg1 == AIRPLANE_MODE_ON);
+                    break;
+                }
+                default:
+                    Sault.HANDLER.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            throw new AssertionError("Unknown handler message received: " + msg.what);
+                        }
+                    });
             }
         }
     }
@@ -389,6 +449,49 @@ class Dispatcher {
     private static class DispatcherThread extends HandlerThread {
         DispatcherThread() {
             super(THREAD_PREFIX + DISPATCHER_THREAD_NAME, THREAD_PRIORITY_BACKGROUND);
+        }
+    }
+
+
+    static class NetworkBroadcastReceiver extends BroadcastReceiver {
+        static final String EXTRA_AIRPLANE_STATE = "state";
+
+        private final Dispatcher dispatcher;
+
+        NetworkBroadcastReceiver(Dispatcher dispatcher) {
+            this.dispatcher = dispatcher;
+        }
+
+        void register() {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(ACTION_AIRPLANE_MODE_CHANGED);
+            if (dispatcher.scansNetworkChanges) {
+                filter.addAction(CONNECTIVITY_ACTION);
+            }
+            dispatcher.context.registerReceiver(this, filter);
+        }
+
+        void unregister() {
+            dispatcher.context.unregisterReceiver(this);
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // On some versions of Android this may be called with a null Intent,
+            // also without extras (getExtras() == null), in such case we use defaults.
+            if (intent == null) {
+                return;
+            }
+            final String action = intent.getAction();
+            if (ACTION_AIRPLANE_MODE_CHANGED.equals(action)) {
+                if (!intent.hasExtra(EXTRA_AIRPLANE_STATE)) {
+                    return; // No airplane state, ignore it. Should we query Utils.isAirplaneModeOn?
+                }
+                dispatcher.dispatchAirplaneModeChange(intent.getBooleanExtra(EXTRA_AIRPLANE_STATE, false));
+            } else if (CONNECTIVITY_ACTION.equals(action)) {
+                ConnectivityManager connectivityManager = getService(context, CONNECTIVITY_SERVICE);
+                dispatcher.dispatchNetworkStateChange(connectivityManager.getActiveNetworkInfo());
+            }
         }
     }
 }
