@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/DownloadLibrary.iml" filepath="$PROJECT_DIR$/DownloadLibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/dl/dl.iml" filepath="$PROJECT_DIR$/dl/dl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dl_rpc/dl_rpc.iml" filepath="$PROJECT_DIR$/dl_rpc/dl_rpc.iml" />
     </modules>
   </component>
 </project>

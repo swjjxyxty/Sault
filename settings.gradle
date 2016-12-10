@@ -1,1 +1,1 @@
-include ':app', ':dl'
+include ':app', ':dl', ':dl_rpc'
