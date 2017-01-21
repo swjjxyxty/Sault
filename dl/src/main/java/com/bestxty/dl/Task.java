@@ -23,9 +23,11 @@ final class Task {
     private final Uri uri;
     private final String key;
     private final Sault sault;
+    private final boolean multiThreadEnabled;
+    private final boolean breakPointEnabled;
 
     Task(Sault sault, String key, Uri uri, File target, Object tag, Priority priority,
-         Callback callback) {
+         Callback callback, boolean multiThreadEnabled, boolean breakPointEnabled) {
         this.sault = sault;
         this.key = key;
         this.uri = uri;
@@ -33,6 +35,16 @@ final class Task {
         this.tag = tag;
         this.priority = priority;
         this.callback = callback;
+        this.multiThreadEnabled = multiThreadEnabled;
+        this.breakPointEnabled = breakPointEnabled;
+    }
+
+    public boolean isMultiThreadEnabled() {
+        return multiThreadEnabled;
+    }
+
+    public boolean isBreakPointEnabled() {
+        return breakPointEnabled;
     }
 
     Object getTag() {

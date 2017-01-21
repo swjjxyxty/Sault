@@ -1,6 +1,5 @@
 package com.bestxty.dl;
 
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -22,7 +21,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
+import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static android.content.Intent.ACTION_AIRPLANE_MODE_CHANGED;
 import static android.net.ConnectivityManager.CONNECTIVITY_ACTION;
@@ -60,6 +61,7 @@ class Dispatcher {
     static final int HUNTER_ERROR = 13;
     static final int NETWORK_STATE_CHANGE = 14;
     static final int AIRPLANE_MODE_CHANGE = 15;
+    static final int THREAD_SUBMIT = 16;
 
     private static final int BATCH_DELAY = 200; // ms
     private static final int RETRY_DELAY = 500;
@@ -84,14 +86,18 @@ class Dispatcher {
     private final Context context;
     private boolean airplaneMode;
 
+    private boolean autoAdjustThreadEnabled;
+
     Dispatcher(Context context,
                ExecutorService service,
                Handler mainThreadHandler,
-               Downloader downloader) {
+               Downloader downloader,
+               boolean autoAdjustThreadEnabled) {
         this.context = context;
         this.service = service;
         this.mainThreadHandler = mainThreadHandler;
         this.downloader = downloader;
+        this.autoAdjustThreadEnabled = autoAdjustThreadEnabled;
         this.dispatcherThread = new DispatcherThread();
         dispatcherThread.start();
         this.handler = new DispatcherHandler(dispatcherThread.getLooper(), this);
@@ -101,11 +107,14 @@ class Dispatcher {
         this.pausedTags = new HashSet<>();
         this.batch = new ArrayList<>(4);
         this.airplaneMode = Utils.isAirplaneModeOn(this.context);
-        this.scansNetworkChanges = hasPermission(context, Manifest.permission.ACCESS_NETWORK_STATE);
+        this.scansNetworkChanges = hasPermission(context, ACCESS_NETWORK_STATE);
         this.receiver = new NetworkBroadcastReceiver(this);
         receiver.register();
     }
 
+    boolean isAutoAdjustThreadEnabled() {
+        return autoAdjustThreadEnabled;
+    }
 
     void shutdown() {
         // Shutdown the thread pool only if it is the one created by Picasso.
@@ -131,6 +140,10 @@ class Dispatcher {
         stats.pausedTagSize = pausedTags.size();
         stats.pausedTaskSize = pausedTaskMap.size();
         return stats;
+    }
+
+    void dispatchDownloadThread(DownloadThread downloadThread) {
+        handler.sendMessage(handler.obtainMessage(THREAD_SUBMIT, downloadThread));
     }
 
     private void dispatchError(ErrorInformer errorInformer) {
@@ -195,13 +208,25 @@ class Dispatcher {
                 airplaneMode ? AIRPLANE_MODE_ON : AIRPLANE_MODE_OFF, 0));
     }
 
+    private void performDownloadThreadSubmit(DownloadThread downloadThread) {
+        service.submit(downloadThread);
+    }
+
     private void performSubmit(Task task) {
         System.out.println("perform submit task,task=" + task.getKey());
-        TaskHunter hunter = new TaskHunter(task.getSault(), this, task, downloader);
-        hunter.future = service.submit(hunter);
+        TaskHunter hunter = buildTaskHunter(task);
+        Future future = service.submit(hunter);
+        hunter.setFuture(future);
         hunterMap.put(hunter.getKey(), hunter);
         System.out.println("put hunter to hunter map. size=" + hunterMap.size());
         dispatchEvent(EventInformer.fromTask(task, EVENT_START));
+    }
+
+    private TaskHunter buildTaskHunter(Task task) {
+        if (task.isMultiThreadEnabled()) {
+            return new MultiThreadTaskHunter(task, downloader, this);
+        }
+        return new DefaultTaskHunter(task.getSault(), this, task, downloader);
     }
 
     private void performPause(Object tag) {
@@ -220,7 +245,6 @@ class Dispatcher {
 
             if (single.getTag().equals(tag)) {
                 System.out.println("find task");
-                hunter.detach(single);
                 System.out.println("detach task for hunter");
                 if (hunter.cancel()) {
                     System.out.println("cancel hunter");
@@ -267,7 +291,6 @@ class Dispatcher {
         TaskHunter hunter = hunterMap.get(key);
         if (hunter != null) {
             System.out.println("find hunter");
-            hunter.detach(task);
             if (hunter.cancel()) {
                 System.out.println("cancel hunter");
                 dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
@@ -329,7 +352,8 @@ class Dispatcher {
 
         // If we don't scan for network changes (missing permission) or if we have connectivity, retry.
         if (!scansNetworkChanges || hasConnectivity) {
-            hunter.future = service.submit(hunter);
+            Future future = service.submit(hunter);
+            hunter.setFuture(future);
             return;
         }
 
@@ -433,6 +457,11 @@ class Dispatcher {
                 }
                 case AIRPLANE_MODE_CHANGE: {
                     dispatcher.performAirplaneModeChange(msg.arg1 == AIRPLANE_MODE_ON);
+                    break;
+                }
+                case THREAD_SUBMIT: {
+                    DownloadThread thread = (DownloadThread) msg.obj;
+                    dispatcher.performDownloadThreadSubmit(thread);
                     break;
                 }
                 default:

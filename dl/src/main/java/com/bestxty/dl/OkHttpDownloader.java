@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
@@ -39,12 +40,7 @@ public class OkHttpDownloader implements Downloader {
         return client.newCall(request).execute();
     }
 
-    @Override
-    public Response load(Uri uri) throws IOException {
-        okhttp3.Response response = internalCall(new Request.Builder()
-                .url(uri.toString())
-                .build());
-
+    private Response handleResponse(okhttp3.Response response) throws ResponseException {
         if (!response.isSuccessful()) {
             response.body().close();
             throw new ResponseException(response.code() + " " + response.message(), response.code());
@@ -56,20 +52,44 @@ public class OkHttpDownloader implements Downloader {
     }
 
     @Override
+    public Response load(Uri uri) throws IOException {
+        okhttp3.Response response = internalCall(new Request.Builder()
+                .url(uri.toString())
+                .build());
+
+        return handleResponse(response);
+    }
+
+    @Override
     public Response load(Uri uri, long startPosition) throws IOException {
         okhttp3.Response response = internalCall(new Request.Builder()
                 .header("Range", "bytes=" + startPosition + "-")
                 .url(uri.toString())
                 .build());
 
-        if (!response.isSuccessful()) {
-            response.body().close();
-            throw new ResponseException(response.code() + " " + response.message(), response.code());
-        }
+        return handleResponse(response);
+    }
 
-        ResponseBody body = response.body();
+    @Override
+    public Response load(Uri uri, long startPosition, long endPosition) throws IOException {
+        okhttp3.Response response = internalCall(new Request.Builder()
+                .header("Range", "bytes=" + startPosition + "-" + endPosition)
+                .url(uri.toString())
+                .build());
 
-        return new Response(body.byteStream(), body.contentLength());
+        return handleResponse(response);
+    }
+
+
+    @Override
+    public long fetchContentLength(Uri uri) throws IOException {
+
+        okhttp3.Response response = internalCall(new Request.Builder()
+                .url(uri.toString())
+                .head()
+                .build());
+
+        return handleResponse(response).contentLength;
     }
 
     @Override

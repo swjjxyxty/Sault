@@ -19,7 +19,21 @@ import static com.bestxty.dl.Utils.DownloadThreadFactory;
  *         Created by xty on 2016/12/9.
  */
 class SaultExecutorService extends ThreadPoolExecutor {
-    private static final int DEFAULT_THREAD_COUNT = 3;
+
+    private static final int CORES = Runtime.getRuntime().availableProcessors();
+    private static final int DEFAULT_THREAD_COUNT = CORES + 1;
+
+
+    private static final int DEFAULT_NETWORK_WIFI_THREAD_COUNT = DEFAULT_THREAD_COUNT;
+    private static final int DEFAULT_NETWORK_4G_THREAD_COUNT = DEFAULT_NETWORK_WIFI_THREAD_COUNT;
+    private static final int DEFAULT_NETWORK_3G_THREAD_COUNT = DEFAULT_NETWORK_4G_THREAD_COUNT - 1;
+    private static final int DEFAULT_NETWORK_2G_THREAD_COUNT = DEFAULT_NETWORK_3G_THREAD_COUNT - 1;
+
+    private int threadCount = DEFAULT_THREAD_COUNT;
+    private int networkWIFIThreadCount = DEFAULT_NETWORK_WIFI_THREAD_COUNT;  //wifi
+    private int networkLTEThreadCount = DEFAULT_NETWORK_4G_THREAD_COUNT;     //4G
+    private int networkCDMAThreadCount = DEFAULT_NETWORK_3G_THREAD_COUNT;    //3G
+    private int networkGPRSThreadCount = DEFAULT_NETWORK_2G_THREAD_COUNT;    //2G
 
     SaultExecutorService() {
         super(DEFAULT_THREAD_COUNT, DEFAULT_THREAD_COUNT, 0, TimeUnit.MICROSECONDS,
@@ -27,45 +41,65 @@ class SaultExecutorService extends ThreadPoolExecutor {
     }
 
 
+    void setThreadCount(int threadCount) {
+        this.threadCount = threadCount;
+    }
+
+    void setNetworkWIFIThreadCount(int networkWIFIThreadCount) {
+        this.networkWIFIThreadCount = networkWIFIThreadCount;
+    }
+
+    void setNetworkLTEThreadCount(int networkLTEThreadCount) {
+        this.networkLTEThreadCount = networkLTEThreadCount;
+    }
+
+    void setNetworkCDMAThreadCount(int networkCDMAThreadCount) {
+        this.networkCDMAThreadCount = networkCDMAThreadCount;
+    }
+
+    void setNetworkGPRSThreadCount(int networkGPRSThreadCount) {
+        this.networkGPRSThreadCount = networkGPRSThreadCount;
+    }
+
     void adjustThreadCount(NetworkInfo info) {
         if (info == null || !info.isConnectedOrConnecting()) {
-            setThreadCount(DEFAULT_THREAD_COUNT);
+            internalSetThreadCount(threadCount);
             return;
         }
         switch (info.getType()) {
             case ConnectivityManager.TYPE_WIFI:
             case ConnectivityManager.TYPE_WIMAX:
             case ConnectivityManager.TYPE_ETHERNET:
-                setThreadCount(4);
+                internalSetThreadCount(networkWIFIThreadCount);
                 break;
             case ConnectivityManager.TYPE_MOBILE:
                 switch (info.getSubtype()) {
                     case TelephonyManager.NETWORK_TYPE_LTE:  // 4G
                     case TelephonyManager.NETWORK_TYPE_HSPAP:
                     case TelephonyManager.NETWORK_TYPE_EHRPD:
-                        setThreadCount(3);
+                        internalSetThreadCount(networkLTEThreadCount);
                         break;
                     case TelephonyManager.NETWORK_TYPE_UMTS: // 3G
                     case TelephonyManager.NETWORK_TYPE_CDMA:
                     case TelephonyManager.NETWORK_TYPE_EVDO_0:
                     case TelephonyManager.NETWORK_TYPE_EVDO_A:
                     case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                        setThreadCount(2);
+                        internalSetThreadCount(networkCDMAThreadCount);
                         break;
                     case TelephonyManager.NETWORK_TYPE_GPRS: // 2G
                     case TelephonyManager.NETWORK_TYPE_EDGE:
-                        setThreadCount(1);
+                        internalSetThreadCount(networkGPRSThreadCount);
                         break;
                     default:
-                        setThreadCount(DEFAULT_THREAD_COUNT);
+                        internalSetThreadCount(threadCount);
                 }
                 break;
             default:
-                setThreadCount(DEFAULT_THREAD_COUNT);
+                internalSetThreadCount(threadCount);
         }
     }
 
-    private void setThreadCount(int threadCount) {
+    private void internalSetThreadCount(int threadCount) {
         setCorePoolSize(threadCount);
         setMaximumPoolSize(threadCount);
     }
@@ -94,7 +128,7 @@ class SaultExecutorService extends ThreadPoolExecutor {
 
             // High-priority requests are "lesser" so they are sorted to the front.
             // Equal priorities are sorted by sequence number to provide FIFO ordering.
-            return (p1 == p2 ? hunter.sequence - other.hunter.sequence : p2.ordinal() - p1.ordinal());
+            return (p1 == p2 ? hunter.getSequence() - other.hunter.getSequence() : p2.ordinal() - p1.ordinal());
         }
     }
 }

@@ -6,11 +6,11 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
@@ -23,14 +23,13 @@ import static com.bestxty.dl.Dispatcher.TASK_EVENT;
 import static com.bestxty.dl.Utils.ErrorInformer;
 import static com.bestxty.dl.Utils.EventInformer;
 import static com.bestxty.dl.Utils.ProgressInformer;
+import static com.bestxty.dl.Utils.log;
 
 /**
  * @author xty
  *         Created by xty on 2016/12/9.
  */
 public final class Sault {
-
-    private static final String TAG = "Sault";
 
 
     static final Handler HANDLER = new Handler(Looper.getMainLooper()) {
@@ -76,21 +75,42 @@ public final class Sault {
         }
     };
 
+
+    /**
+     * task priority.
+     * default value is normal.
+     */
     public enum Priority {
         LOW,
         NORMAL,
         HIGH
     }
 
+    /**
+     * task dispatcher.
+     */
     private final Dispatcher dispatcher;
 
+    /**
+     * file save dir.
+     */
     private final File saveDir;
 
+    /**
+     * task map.
+     */
     private final Map<Object, Task> taskMap;
 
-    Sault(Dispatcher dispatcher, File saveDir) {
+
+    private boolean loggingEnabled;
+
+    private boolean breakPointEnabled;
+    private boolean multiThreadEnabled;
+
+    Sault(Dispatcher dispatcher, File saveDir, boolean loggingEnabled) {
         this.dispatcher = dispatcher;
         this.saveDir = saveDir;
+        this.loggingEnabled = loggingEnabled;
         taskMap = new LinkedHashMap<>();
     }
 
@@ -103,6 +123,23 @@ public final class Sault {
         stats.taskSize = taskMap.size();
         return stats;
     }
+
+
+    /**
+     * {@code true} if debug logging is enabled.
+     */
+    public boolean isLoggingEnabled() {
+        return loggingEnabled;
+    }
+
+    public boolean isBreakPointEnabled() {
+        return breakPointEnabled;
+    }
+
+    public boolean isMultiThreadEnabled() {
+        return multiThreadEnabled;
+    }
+
 
     private void cancelTask(Task task) {
         taskMap.remove(task.getTag());
@@ -117,7 +154,7 @@ public final class Sault {
     }
 
     private void complete(TaskHunter hunter) {
-        Log.d(TAG, "complete() called with: hunter = [" + hunter + "]");
+        log("complete() called with: hunter = [" + hunter + "]");
         Task single = hunter.getTask();
         taskMap.remove(single.getTag());
         Callback callback = single.getCallback();
@@ -128,23 +165,23 @@ public final class Sault {
     }
 
     void enqueueAndSubmit(Task task) {
-        System.out.println("enqueue and submit task.task=" + task.getKey());
+        log("enqueue and submit task.task=" + task.getKey());
         Task source = taskMap.get(task.getTag());
 
         if (source == null) {
             taskMap.put(task.getTag(), task);
-            System.out.println("put task to task map");
+            log("put task to task map");
         }
         submit(task);
     }
 
-    void submit(Task task) {
-        System.out.println("submit task. task=" + task.getKey());
+    private void submit(Task task) {
+        log("submit task. task=" + task.getKey());
         dispatcher.dispatchSubmit(task);
     }
 
     public TaskBuilder load(String url) {
-        System.out.println("load task from url:" + url);
+        log("load task from url:" + url);
         return new TaskBuilder(this, Uri.parse(url));
     }
 
@@ -161,7 +198,7 @@ public final class Sault {
         if (task != null) {
             dispatcher.dispatchCancel(task);
         } else {
-            System.out.println("not found need cancel task.");
+            log("not found need cancel task.");
         }
     }
 
@@ -175,14 +212,24 @@ public final class Sault {
         private ExecutorService service;
         private Downloader downloader;
         private Context context;
+        private boolean loggingEnabled = false;
+        private boolean breakPointEnabled = true;
+        private boolean multiThreadEnabled = true;
+        private boolean autoAdjustThreadEnabled = true;
+
+        private int threadCount = -1;
+        private int networkWIFIThreadCount = -1;  //wifi
+        private int networkLTEThreadCount = -1;     //4G
+        private int networkCDMAThreadCount = -1;    //3G
+        private int networkGPRSThreadCount = -1;    //2G
 
         public Builder(Context context) {
-            System.out.println("create sault builder.");
+            log("create sault builder.");
             this.context = context;
         }
 
         public Builder saveDir(String saveDir) {
-            System.out.println("set default file save dir. saveDir=" + saveDir);
+            log("set default file save dir. saveDir=" + saveDir);
             return saveDir(new File(saveDir));
         }
 
@@ -201,18 +248,95 @@ public final class Sault {
             return this;
         }
 
+        public Builder threadCount(int threadCount) {
+            this.threadCount = threadCount;
+            return this;
+        }
+
+        public Builder networkWIFIThreadCount(int networkWIFIThreadCount) {
+            this.networkWIFIThreadCount = networkWIFIThreadCount;
+            return this;
+        }
+
+        public Builder network4GThreadCount(int networkLTEThreadCount) {
+            this.networkLTEThreadCount = networkLTEThreadCount;
+            return this;
+        }
+
+        public Builder network3GThreadCount(int networkCDMAThreadCount) {
+            this.networkCDMAThreadCount = networkCDMAThreadCount;
+            return this;
+        }
+
+        public Builder network2GThreadCount(int networkGPRSThreadCount) {
+            this.networkGPRSThreadCount = networkGPRSThreadCount;
+            return this;
+        }
+
+        /**
+         * Toggle whether debug logging is enabled.
+         * <p>
+         * <b>WARNING:</b> Enabling this will result in excessive object allocation. This should be only
+         * be used for debugging purposes. Do NOT pass {@code BuildConfig.DEBUG}.
+         */
+        public Builder loggingEnabled(boolean enabled) {
+            this.loggingEnabled = enabled;
+            return this;
+        }
+
+        public Builder breakPointEnabled(boolean enabled) {
+            this.breakPointEnabled = enabled;
+            return this;
+        }
+
+        public Builder multiThreadEnabled(boolean enabled) {
+            this.multiThreadEnabled = enabled;
+            return this;
+        }
+
+        public Builder autoAdjustThreadEnabled(boolean enabled) {
+            this.autoAdjustThreadEnabled = enabled;
+            return this;
+        }
+
+
+        private void setupSaultExecutorService() {
+            SaultExecutorService executorService = (SaultExecutorService) service;
+            if (threadCount != -1) {
+                executorService.setThreadCount(threadCount);
+            }
+            if (networkWIFIThreadCount != -1) {
+                executorService.setNetworkWIFIThreadCount(networkWIFIThreadCount);
+            }
+            if (networkLTEThreadCount != -1) {
+                executorService.setNetworkLTEThreadCount(networkLTEThreadCount);
+            }
+            if (networkCDMAThreadCount != -1) {
+                executorService.setNetworkCDMAThreadCount(networkCDMAThreadCount);
+            }
+            if (networkGPRSThreadCount != -1) {
+                executorService.setNetworkGPRSThreadCount(networkGPRSThreadCount);
+            }
+            log(String.format(Locale.CHINA, "set up sault executor service. " +
+                            "threadCount=%d,wifiThreadCount=%d,4GThreadCount=%d,3GThreadCount=%d,2GThreadCount=%d.",
+                    threadCount, networkWIFIThreadCount, networkLTEThreadCount,
+                    networkCDMAThreadCount, networkGPRSThreadCount));
+        }
+
         public Sault build() {
-            System.out.println("build sault");
+            log("build sault.");
             if (service == null) {
-                System.out.println("not set executor service ,create default sault executor service.");
+                log("not set executor service ,create default sault executor service.");
                 service = new SaultExecutorService();
+                setupSaultExecutorService();
             }
             if (downloader == null) {
-                System.out.println("not set downloader ,create default okhttp downloader.");
+                log("not set downloader ,create default okhttp downloader.");
                 downloader = new OkHttpDownloader();
             }
-            Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader);
-            return new Sault(dispatcher, saveDir);
+            Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader,
+                    autoAdjustThreadEnabled);
+            return new Sault(dispatcher, saveDir, loggingEnabled);
         }
     }
 }

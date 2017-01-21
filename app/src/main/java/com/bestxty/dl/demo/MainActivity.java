@@ -1,32 +1,32 @@
 package com.bestxty.dl.demo;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    private TextView mTextView;
-    private TextView mSpeed;
-    private TextView mTextView2;
-    private TextView mSpeed2;
-    private TextView mTextView3;
-    private TextView mSpeed3;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mTextView = (TextView) findViewById(R.id.text_progress);
-        mSpeed = (TextView) findViewById(R.id.text_speed);
-        mTextView2 = (TextView) findViewById(R.id.text_progress2);
-        mSpeed2 = (TextView) findViewById(R.id.text_speed2);
-        mTextView3 = (TextView) findViewById(R.id.text_progress3);
-        mSpeed3 = (TextView) findViewById(R.id.text_speed3);
-        Log.d(TAG, "rest--------------------------------");
+        findViewById(R.id.btn_single_task).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this, SingleTaskActivity.class));
+            }
+        });
+        findViewById(R.id.btn_mutil_task).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this, MutilTaskActivity.class));
+            }
+        });
     }
 
 

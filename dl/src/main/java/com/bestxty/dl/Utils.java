@@ -6,7 +6,11 @@ import android.content.pm.PackageManager;
 import android.os.Process;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ThreadFactory;
 
 import static android.provider.Settings.System.AIRPLANE_MODE_ON;
@@ -17,7 +21,8 @@ import static android.provider.Settings.System.AIRPLANE_MODE_ON;
  */
 final class Utils {
 
-    static final String THREAD_PREFIX = "Download-";
+    static final String TAG = "Sault";
+    static final String THREAD_PREFIX = "Sault-";
     static final String DISPATCHER_THREAD_NAME = "Dispatcher";
     static final String THREAD_IDLE_NAME = THREAD_PREFIX + "Idle";
 
@@ -26,6 +31,38 @@ final class Utils {
     static final int DEFAULT_WRITE_TIMEOUT_MILLIS = 20 * 1000; // 20s
     static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 15 * 1000; // 15s
 
+    static void log(String msg) {
+        Log.d(TAG, msg);
+    }
+
+    static void closeQuietly(Closeable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (IOException ioe) {
+            // ignore
+        }
+    }
+
+
+    static void createTargetFile(File file) throws IOException {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                throw new IOException("File '" + file + "' exists but is a directory");
+            }
+            if (!file.canWrite()) {
+                throw new IOException("File '" + file + "' cannot be written to");
+            }
+        } else {
+            File parent = file.getParentFile();
+            if (parent != null) {
+                if (!parent.mkdirs() && !parent.isDirectory()) {
+                    throw new IOException("Directory '" + parent + "' could not be created");
+                }
+            }
+        }
+    }
 
     static boolean isAirplaneModeOn(Context context) {
         ContentResolver contentResolver = context.getContentResolver();
