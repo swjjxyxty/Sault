@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.bestxty.dl.Sault.Priority;
 import static com.bestxty.dl.Utils.DownloadThreadFactory;
+import static com.bestxty.dl.Utils.log;
 
 /**
  * @author xty
@@ -27,6 +28,7 @@ class SaultExecutorService extends ThreadPoolExecutor {
     private static final int DEFAULT_NETWORK_WIFI_THREAD_COUNT = DEFAULT_THREAD_COUNT;
     private static final int DEFAULT_NETWORK_4G_THREAD_COUNT = DEFAULT_NETWORK_WIFI_THREAD_COUNT;
     private static final int DEFAULT_NETWORK_3G_THREAD_COUNT = DEFAULT_NETWORK_4G_THREAD_COUNT - 1;
+    // FIXME: 2017/2/8 thread count !=cores. cores maybe <=2
     private static final int DEFAULT_NETWORK_2G_THREAD_COUNT = DEFAULT_NETWORK_3G_THREAD_COUNT - 1;
 
     private int threadCount = DEFAULT_THREAD_COUNT;
@@ -38,6 +40,11 @@ class SaultExecutorService extends ThreadPoolExecutor {
     SaultExecutorService() {
         super(DEFAULT_THREAD_COUNT, DEFAULT_THREAD_COUNT, 0, TimeUnit.MICROSECONDS,
                 new PriorityBlockingQueue<Runnable>(), new DownloadThreadFactory());
+        log("cores="+CORES);
+        log("DEFAULT_THREAD_COUNT="+DEFAULT_THREAD_COUNT);
+        log("DEFAULT_NETWORK_4G_THREAD_COUNT="+DEFAULT_NETWORK_4G_THREAD_COUNT);
+        log("DEFAULT_NETWORK_3G_THREAD_COUNT="+DEFAULT_NETWORK_3G_THREAD_COUNT);
+        log("DEFAULT_NETWORK_2G_THREAD_COUNT="+DEFAULT_NETWORK_2G_THREAD_COUNT);
     }
 
 
@@ -104,12 +111,12 @@ class SaultExecutorService extends ThreadPoolExecutor {
         setMaximumPoolSize(threadCount);
     }
 
-    @Override
-    public Future<?> submit(Runnable task) {
-        DownloadFutureTask ftask = new DownloadFutureTask((TaskHunter) task);
-        execute(ftask);
-        return ftask;
-    }
+//    @Override
+//    public Future<?> submit(Runnable task) {
+//        DownloadFutureTask ftask = new DownloadFutureTask((TaskHunter) task);
+//        execute(ftask);
+//        return ftask;
+//    }
 
 
     private static final class DownloadFutureTask extends FutureTask<TaskHunter>

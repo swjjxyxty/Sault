@@ -61,7 +61,6 @@ class Dispatcher {
     static final int HUNTER_ERROR = 13;
     static final int NETWORK_STATE_CHANGE = 14;
     static final int AIRPLANE_MODE_CHANGE = 15;
-    static final int THREAD_SUBMIT = 16;
 
     private static final int BATCH_DELAY = 200; // ms
     private static final int RETRY_DELAY = 500;
@@ -142,8 +141,8 @@ class Dispatcher {
         return stats;
     }
 
-    void dispatchDownloadThread(DownloadThread downloadThread) {
-        handler.sendMessage(handler.obtainMessage(THREAD_SUBMIT, downloadThread));
+    Future submit(Runnable runnable) {
+        return service.submit(runnable);
     }
 
     private void dispatchError(ErrorInformer errorInformer) {
@@ -208,9 +207,6 @@ class Dispatcher {
                 airplaneMode ? AIRPLANE_MODE_ON : AIRPLANE_MODE_OFF, 0));
     }
 
-    private void performDownloadThreadSubmit(DownloadThread downloadThread) {
-        service.submit(downloadThread);
-    }
 
     private void performSubmit(Task task) {
         System.out.println("perform submit task,task=" + task.getKey());
@@ -223,10 +219,10 @@ class Dispatcher {
     }
 
     private TaskHunter buildTaskHunter(Task task) {
-        if (task.isMultiThreadEnabled()) {
-            return new MultiThreadTaskHunter(task, downloader, this);
-        }
-        return new DefaultTaskHunter(task.getSault(), this, task, downloader);
+//        if (task.isMultiThreadEnabled()) {
+//            return new MultiThreadTaskHunter(task, downloader, this);
+//        }
+        return new SaultTaskHunter(task.getSault(), this, task, downloader);
     }
 
     private void performPause(Object tag) {
@@ -457,11 +453,6 @@ class Dispatcher {
                 }
                 case AIRPLANE_MODE_CHANGE: {
                     dispatcher.performAirplaneModeChange(msg.arg1 == AIRPLANE_MODE_ON);
-                    break;
-                }
-                case THREAD_SUBMIT: {
-                    DownloadThread thread = (DownloadThread) msg.obj;
-                    dispatcher.performDownloadThreadSubmit(thread);
                     break;
                 }
                 default:

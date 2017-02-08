@@ -77,7 +77,7 @@ class MultiThreadTaskHunter implements TaskHunter, DownloadThreadStatusListener 
                     .create(start, end, THREAD_ID_GENERATOR.incrementAndGet());
             DownloadThread downloadThread = new DownloadThread(task, downloader, threadInfo, this);
             downloadThreadInfoList.add(threadInfo);
-            dispatcher.dispatchDownloadThread(downloadThread);
+            dispatcher.submit(downloadThread);
         }
     }
 

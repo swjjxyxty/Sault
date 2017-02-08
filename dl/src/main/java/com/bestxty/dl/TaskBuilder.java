@@ -84,6 +84,7 @@ public class TaskBuilder {
         if (target == null) {
             log("not set target , use default target file.");
             target = new File(sault.getSaveDir().getAbsolutePath() + File.separator + uri.getLastPathSegment());
+            log(target.getAbsolutePath());
         }
         if (priority == null) {
             log("not set priority, use default priority normal");

@@ -66,7 +66,7 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_start:
-                tag = sault.load("http://192.168.99.200:8000/test_5.pdf")
+                tag = sault.load("http://192.168.100.13:8000/DSC_2763.psd")
                         .tag("test-task")
                         .listener(new Callback() {
                             @Override

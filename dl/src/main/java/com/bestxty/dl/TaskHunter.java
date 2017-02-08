@@ -30,5 +30,5 @@ interface TaskHunter extends Runnable {
 
     boolean shouldRetry(boolean airplaneMode, NetworkInfo info);
 
-    void setFuture(Future future);
+    void setFuture(Future<?> future);
 }

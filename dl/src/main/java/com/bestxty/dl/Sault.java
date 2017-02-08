@@ -14,6 +14,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+import okhttp3.OkHttpClient;
+
 import static com.bestxty.dl.Callback.EVENT_CANCEL;
 import static com.bestxty.dl.Dispatcher.HUNTER_BATCH_COMPLETE;
 import static com.bestxty.dl.Dispatcher.HUNTER_ERROR;
@@ -107,10 +109,13 @@ public final class Sault {
     private boolean breakPointEnabled;
     private boolean multiThreadEnabled;
 
-    Sault(Dispatcher dispatcher, File saveDir, boolean loggingEnabled) {
+    Sault(Dispatcher dispatcher, File saveDir, boolean loggingEnabled,
+          boolean breakPointEnabled,boolean multiThreadEnabled) {
         this.dispatcher = dispatcher;
         this.saveDir = saveDir;
         this.loggingEnabled = loggingEnabled;
+        this.breakPointEnabled=breakPointEnabled;
+        this.multiThreadEnabled = multiThreadEnabled;
         taskMap = new LinkedHashMap<>();
     }
 
@@ -211,6 +216,7 @@ public final class Sault {
         private File saveDir;
         private ExecutorService service;
         private Downloader downloader;
+        private OkHttpClient httpClient;
         private Context context;
         private boolean loggingEnabled = false;
         private boolean breakPointEnabled = true;
@@ -235,6 +241,11 @@ public final class Sault {
 
         public Builder saveDir(File saveDir) {
             this.saveDir = saveDir;
+            return this;
+        }
+
+        public Builder client(OkHttpClient httpClient) {
+            this.httpClient = httpClient;
             return this;
         }
 
@@ -324,19 +335,16 @@ public final class Sault {
         }
 
         public Sault build() {
-            log("build sault.");
             if (service == null) {
-                log("not set executor service ,create default sault executor service.");
                 service = new SaultExecutorService();
                 setupSaultExecutorService();
             }
             if (downloader == null) {
-                log("not set downloader ,create default okhttp downloader.");
-                downloader = new OkHttpDownloader();
+                downloader = httpClient == null ? new OkHttpDownloader() : new OkHttpDownloader(httpClient);
             }
             Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader,
                     autoAdjustThreadEnabled);
-            return new Sault(dispatcher, saveDir, loggingEnabled);
+            return new Sault(dispatcher, saveDir, loggingEnabled,breakPointEnabled,multiThreadEnabled);
         }
     }
 }
