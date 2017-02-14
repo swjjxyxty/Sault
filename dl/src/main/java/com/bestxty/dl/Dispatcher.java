@@ -365,7 +365,7 @@ class Dispatcher {
     private void performError(TaskHunter hunter) {
         hunterMap.remove(hunter.getKey());
         dispatchError(ErrorInformer.fromTask(hunter.getTask().getCallback(),
-                new DownloadException(hunter.getKey(),
+                new SaultException(hunter.getKey(),
                         hunter.getTask().getUri().toString(),
                         hunter.getException())));
         batch(hunter);

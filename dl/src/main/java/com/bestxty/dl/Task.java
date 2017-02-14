@@ -86,9 +86,6 @@ final class Task {
         return sault;
     }
 
-    boolean isNeedResume() {
-        return breakPointEnabled;
-    }
 
     void splitTask() {
         subTaskList.clear();
@@ -115,31 +112,35 @@ final class Task {
     }
 
 
-    public List<SubTask> getSubTaskList() {
+    List<SubTask> getSubTaskList() {
         return subTaskList;
     }
 
     static class SubTask {
         private final long startPosition;
         private final long endPosition;
-        private final long threadId;
+        private final long id;
 
         long startTime;
         long endTime;
 
         long finishedSize;
 
-        private SubTask(long startPosition, long endPosition, long threadId) {
+        private SubTask(long startPosition, long endPosition, long id) {
             this.startPosition = startPosition;
             this.endPosition = endPosition;
-            this.threadId = threadId;
+            this.id = id;
         }
 
-        public long getStartPosition() {
+        public long getId() {
+            return id;
+        }
+
+        long getStartPosition() {
             return startPosition;
         }
 
-        public long getEndPosition() {
+        long getEndPosition() {
             return endPosition;
         }
 
@@ -148,16 +149,16 @@ final class Task {
         }
 
 
-        static SubTask create(long startPosition, long endPosition, long threadId) {
-            return new SubTask(startPosition, endPosition, threadId);
+        static SubTask create(long startPosition, long endPosition, long id) {
+            return new SubTask(startPosition, endPosition, id);
         }
 
 
         @Override
         public String toString() {
             final StringBuilder sb = new StringBuilder("{");
-            sb.append("\"threadId\":")
-                    .append(threadId);
+            sb.append("\"id\":")
+                    .append(id);
             sb.append(",\"startPosition\":")
                     .append(startPosition);
             sb.append(",\"endPosition\":")

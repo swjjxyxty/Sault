@@ -88,14 +88,14 @@ final class Utils {
 
     static class ErrorInformer {
         private Callback callback;
-        private DownloadException exception;
+        private SaultException exception;
 
-        ErrorInformer(DownloadException exception, Callback callback) {
+        ErrorInformer(SaultException exception, Callback callback) {
             this.exception = exception;
             this.callback = callback;
         }
 
-        static ErrorInformer fromTask(Callback callback, DownloadException exception) {
+        static ErrorInformer fromTask(Callback callback, SaultException exception) {
             return new ErrorInformer(exception, callback);
         }
 

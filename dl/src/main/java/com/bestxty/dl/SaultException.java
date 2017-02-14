@@ -7,7 +7,7 @@ import android.os.Parcelable;
  * @author xty
  *         Created by xty on 2016/12/8.
  */
-public class DownloadException extends RuntimeException implements Parcelable {
+public class SaultException extends RuntimeException implements Parcelable {
 
 
     private String key;
@@ -16,24 +16,24 @@ public class DownloadException extends RuntimeException implements Parcelable {
 
     private String reason;
 
-    public DownloadException() {
+    public SaultException() {
     }
 
-    public DownloadException(String key, String url, String reason) {
+    public SaultException(String key, String url, String reason) {
         this.key = key;
         this.url = url;
         this.reason = reason;
     }
 
 
-    public DownloadException(String key, String url, Throwable throwable) {
+    public SaultException(String key, String url, Throwable throwable) {
         super(throwable);
         this.key = key;
         this.url = url;
     }
 
 
-    public DownloadException(String key, String url, String reason, Throwable throwable) {
+    public SaultException(String key, String url, String reason, Throwable throwable) {
         super(throwable);
         this.key = key;
         this.url = url;
@@ -71,26 +71,26 @@ public class DownloadException extends RuntimeException implements Parcelable {
 
 
     @SuppressWarnings("WeakerAccess")
-    public DownloadException readFromParcel(Parcel in) {
-        return new DownloadException(in);
+    public SaultException readFromParcel(Parcel in) {
+        return new SaultException(in);
     }
 
-    protected DownloadException(Parcel in) {
+    protected SaultException(Parcel in) {
         this.key = in.readString();
         this.url = in.readString();
         this.reason = in.readString();
     }
 
 
-    public static final Creator<DownloadException> CREATOR = new Creator<DownloadException>() {
+    public static final Creator<SaultException> CREATOR = new Creator<SaultException>() {
         @Override
-        public DownloadException createFromParcel(Parcel source) {
-            return new DownloadException(source);
+        public SaultException createFromParcel(Parcel source) {
+            return new SaultException(source);
         }
 
         @Override
-        public DownloadException[] newArray(int size) {
-            return new DownloadException[size];
+        public SaultException[] newArray(int size) {
+            return new SaultException[size];
         }
     };
 }

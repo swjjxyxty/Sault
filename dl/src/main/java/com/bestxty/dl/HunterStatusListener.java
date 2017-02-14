@@ -2,9 +2,9 @@ package com.bestxty.dl;
 
 /**
  * @author xty
- * Created by xty on 2017/2/14.
+ *         Created by xty on 2017/2/14.
  */
-public interface HunterStatusListener {
+interface HunterStatusListener {
 
     void onProgress(long progress);
 

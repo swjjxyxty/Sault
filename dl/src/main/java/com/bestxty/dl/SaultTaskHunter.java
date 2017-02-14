@@ -2,9 +2,10 @@ package com.bestxty.dl;
 
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.util.Log;
 
+import com.bestxty.dl.Downloader.ContentLengthException;
 import com.bestxty.dl.Downloader.Response;
+import com.bestxty.dl.Utils.ProgressInformer;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +56,7 @@ class SaultTaskHunter implements TaskHunter, HunterStatusListener {
     @Override
     public synchronized void onProgress(long length) {
         task.finishedSize += length;
-        Utils.ProgressInformer progress = new Utils.ProgressInformer(task.getTag(), task.getCallback());
+        ProgressInformer progress = new ProgressInformer(task.getTag(), task.getCallback());
 
         progress.totalSize = task.totalSize;
 
@@ -68,83 +69,78 @@ class SaultTaskHunter implements TaskHunter, HunterStatusListener {
         taskHunterList.remove(hunter);
 
         if (taskHunterList.isEmpty()) {
+            task.endTime = System.nanoTime();
             dispatcher.dispatchComplete(this);
+        }
+    }
+
+    private void hunter(boolean needResume) throws IOException {
+
+        Response response = needResume ? downloader.load(task.getUri(), task.finishedSize)
+                : downloader.load(task.getUri());
+
+        InputStream stream = response.stream;
+        if (stream == null) {
+            log("stream is null");
+            return;
+        }
+
+        if (response.contentLength == 0) {
+            closeQuietly(stream);
+            throw new ContentLengthException("Received response with 0 content-length header.");
+        }
+
+        createTargetFile(task.getTarget());
+        RandomAccessFile output = new RandomAccessFile(task.getTarget(), "rw");
+        ProgressInformer progress = new ProgressInformer(task.getTag(), task.getCallback());
+
+        if (needResume) {
+            output.seek(task.finishedSize);
+            progress.totalSize = task.totalSize;
+        } else {
+            progress.totalSize = response.contentLength;
+            task.totalSize = response.contentLength;
+            task.finishedSize = 0;
+        }
+
+        try {
+            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+            int length;
+            while (EOF != (length = stream.read(buffer))) {
+                output.write(buffer, 0, length);
+                task.finishedSize += length;
+                progress.finishedSize = task.finishedSize;
+                dispatcher.dispatchProgress(progress);
+            }
+
+        } finally {
+            closeQuietly(output);
+            closeQuietly(stream);
         }
     }
 
     @Override
     public void run() {
+        task.startTime = System.nanoTime();
+
+        boolean needResume = task.finishedSize != 0
+                && task.isBreakPointEnabled()
+                && downloader.supportBreakPoint();
+
         if (!task.isMultiThreadEnabled()) {
 
             try {
-                Log.d("SaultTaskHunter", "task.isBreakPointEnabled():" + task.isBreakPointEnabled());
-                boolean needResume = task.finishedSize != 0
-                        && task.isBreakPointEnabled()
-                        && downloader.supportBreakPoint();
-
-                Log.d("SaultTaskHunter", "needResume:" + needResume);
-
-                Response response = needResume ? downloader.load(task.getUri(), task.finishedSize)
-                        : downloader.load(task.getUri());
-
-//                Response response = downloader.load(task.getUri());
-
-                InputStream stream = response.stream;
-                if (stream == null) {
-                    System.out.println("stream is null");
-                    return;
-                }
-
-                if (response.contentLength == 0) {
-                    closeQuietly(stream);
-                    throw new Downloader.ContentLengthException("Received response with 0 content-length header.");
-                }
-                try {
-                    createTargetFile(task.getTarget());
-
-                    RandomAccessFile output = new RandomAccessFile(task.getTarget(), "rw");
-                    Utils.ProgressInformer progress = new Utils.ProgressInformer(task.getTag(), task.getCallback());
-
-                    if (needResume) {
-                        output.seek(task.finishedSize);
-                        progress.totalSize = task.totalSize;
-                    } else {
-                        progress.totalSize = response.contentLength;
-                        task.totalSize = response.contentLength;
-                        task.finishedSize = 0;
-                    }
-
-                    try {
-                        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-                        int length;
-                        while (EOF != (length = stream.read(buffer))) {
-                            output.write(buffer, 0, length);
-                            task.finishedSize += length;
-                            progress.finishedSize = task.finishedSize;
-                            dispatcher.dispatchProgress(progress);
-                        }
-
-                        output.close(); // don't swallow close Exception if copy completes normally
-                    } finally {
-                        closeQuietly(output);
-                    }
-                } finally {
-                    closeQuietly(stream);
-                }
+                hunter(needResume);
+                task.endTime = System.nanoTime();
+                dispatcher.dispatchComplete(this);
             } catch (Exception e) {
                 e.printStackTrace();
+                exception = e;
+                dispatcher.dispatchFailed(this);
             }
-            dispatcher.dispatchComplete(this);
             return;
         }
         try {
-
-            boolean needResume = task.finishedSize != 0
-                    && task.isBreakPointEnabled()
-                    && downloader.supportBreakPoint();
-
-            Log.d("SaultTaskHunter", "needResume:" + needResume);
-
 
             if (!needResume) {
                 task.totalSize = downloader.fetchContentLength(task.getUri());
@@ -160,7 +156,8 @@ class SaultTaskHunter implements TaskHunter, HunterStatusListener {
                     continue;
                 }
 
-                InternalTaskHunter taskHunter = new InternalTaskHunter(subTask, task.getUri(), downloader, task.getTarget(), this);
+                InternalTaskHunter taskHunter = new InternalTaskHunter(subTask, task.getUri(),
+                        downloader, task.getTarget(), this);
                 taskHunterList.add(taskHunter);
                 Future future = dispatcher.submit(taskHunter);
                 taskHunter.setFuture(future);
@@ -253,9 +250,6 @@ class SaultTaskHunter implements TaskHunter, HunterStatusListener {
         public boolean cancel() {
 
             return future != null && (future.isDone() || future.cancel(true));
-
-            //            return (future != null && future.isDone()) || (future != null
-//                    && future.cancel(true));
         }
 
 
@@ -265,8 +259,10 @@ class SaultTaskHunter implements TaskHunter, HunterStatusListener {
 
         @Override
         public void run() {
+            subTask.startTime = System.nanoTime();
             try {
                 receiveContent(subTask);
+                subTask.endTime = System.nanoTime();
                 listener.onFinish(this);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -290,29 +286,22 @@ class SaultTaskHunter implements TaskHunter, HunterStatusListener {
 
             if (response.contentLength == 0) {
                 closeQuietly(stream);
-                throw new Downloader.ContentLengthException("Received response with 0 content-length header.");
+                throw new ContentLengthException("Received response with 0 content-length header.");
             }
+            createTargetFile(target);
+            RandomAccessFile output = new RandomAccessFile(target, "rw");
+            output.seek(startPosition);
             try {
-                createTargetFile(target);
-
-                RandomAccessFile output = new RandomAccessFile(target, "rw");
-
-                output.seek(startPosition);
-
-                try {
-                    byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-                    int length;
-                    while (EOF != (length = stream.read(buffer))) {
-                        output.write(buffer, 0, length);
-                        subTask.finishedSize += length;
-                        listener.onProgress(length);
-                    }
-
-                    output.close(); // don't swallow close Exception if copy completes normally
-                } finally {
-                    closeQuietly(output);
+                byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+                int length;
+                while (EOF != (length = stream.read(buffer))) {
+                    output.write(buffer, 0, length);
+                    subTask.finishedSize += length;
+                    listener.onProgress(length);
                 }
+
             } finally {
+                closeQuietly(output);
                 closeQuietly(stream);
                 log("done." + subTask.finishedSize);
 
@@ -347,7 +336,7 @@ class SaultTaskHunter implements TaskHunter, HunterStatusListener {
 
         @Override
         public int getSequence() {
-            return 0;
+            return (int) subTask.getId();
         }
 
         @Override

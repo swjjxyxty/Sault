@@ -10,7 +10,6 @@ import android.os.Message;
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
@@ -107,14 +106,15 @@ public final class Sault {
     private boolean loggingEnabled;
 
     private boolean breakPointEnabled;
+
     private boolean multiThreadEnabled;
 
     Sault(Dispatcher dispatcher, File saveDir, boolean loggingEnabled,
-          boolean breakPointEnabled,boolean multiThreadEnabled) {
+          boolean breakPointEnabled, boolean multiThreadEnabled) {
         this.dispatcher = dispatcher;
         this.saveDir = saveDir;
         this.loggingEnabled = loggingEnabled;
-        this.breakPointEnabled=breakPointEnabled;
+        this.breakPointEnabled = breakPointEnabled;
         this.multiThreadEnabled = multiThreadEnabled;
         taskMap = new LinkedHashMap<>();
     }
@@ -223,11 +223,6 @@ public final class Sault {
         private boolean multiThreadEnabled = true;
         private boolean autoAdjustThreadEnabled = true;
 
-        private int threadCount = -1;
-        private int networkWIFIThreadCount = -1;  //wifi
-        private int networkLTEThreadCount = -1;     //4G
-        private int networkCDMAThreadCount = -1;    //3G
-        private int networkGPRSThreadCount = -1;    //2G
 
         public Builder(Context context) {
             log("create sault builder.");
@@ -259,30 +254,6 @@ public final class Sault {
             return this;
         }
 
-        public Builder threadCount(int threadCount) {
-            this.threadCount = threadCount;
-            return this;
-        }
-
-        public Builder networkWIFIThreadCount(int networkWIFIThreadCount) {
-            this.networkWIFIThreadCount = networkWIFIThreadCount;
-            return this;
-        }
-
-        public Builder network4GThreadCount(int networkLTEThreadCount) {
-            this.networkLTEThreadCount = networkLTEThreadCount;
-            return this;
-        }
-
-        public Builder network3GThreadCount(int networkCDMAThreadCount) {
-            this.networkCDMAThreadCount = networkCDMAThreadCount;
-            return this;
-        }
-
-        public Builder network2GThreadCount(int networkGPRSThreadCount) {
-            this.networkGPRSThreadCount = networkGPRSThreadCount;
-            return this;
-        }
 
         /**
          * Toggle whether debug logging is enabled.
@@ -311,40 +282,16 @@ public final class Sault {
         }
 
 
-        private void setupSaultExecutorService() {
-            SaultExecutorService executorService = (SaultExecutorService) service;
-            if (threadCount != -1) {
-                executorService.setThreadCount(threadCount);
-            }
-            if (networkWIFIThreadCount != -1) {
-                executorService.setNetworkWIFIThreadCount(networkWIFIThreadCount);
-            }
-            if (networkLTEThreadCount != -1) {
-                executorService.setNetworkLTEThreadCount(networkLTEThreadCount);
-            }
-            if (networkCDMAThreadCount != -1) {
-                executorService.setNetworkCDMAThreadCount(networkCDMAThreadCount);
-            }
-            if (networkGPRSThreadCount != -1) {
-                executorService.setNetworkGPRSThreadCount(networkGPRSThreadCount);
-            }
-            log(String.format(Locale.CHINA, "set up sault executor service. " +
-                            "threadCount=%d,wifiThreadCount=%d,4GThreadCount=%d,3GThreadCount=%d,2GThreadCount=%d.",
-                    threadCount, networkWIFIThreadCount, networkLTEThreadCount,
-                    networkCDMAThreadCount, networkGPRSThreadCount));
-        }
-
         public Sault build() {
             if (service == null) {
                 service = new SaultExecutorService();
-                setupSaultExecutorService();
             }
             if (downloader == null) {
                 downloader = httpClient == null ? new OkHttpDownloader() : new OkHttpDownloader(httpClient);
             }
             Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader,
                     autoAdjustThreadEnabled);
-            return new Sault(dispatcher, saveDir, loggingEnabled,breakPointEnabled,multiThreadEnabled);
+            return new Sault(dispatcher, saveDir, loggingEnabled, breakPointEnabled, multiThreadEnabled);
         }
     }
 }

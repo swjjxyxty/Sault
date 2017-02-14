@@ -104,7 +104,6 @@ public class TaskBuilder {
                 multiThreadEnabled, breakPointEnabled);
 
         task.id = ID_GENERATOR.incrementAndGet();
-        task.startTime = System.nanoTime();
 
         sault.enqueueAndSubmit(task);
 

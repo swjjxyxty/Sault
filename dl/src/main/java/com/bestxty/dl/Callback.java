@@ -61,7 +61,7 @@ public interface Callback {
     /**
      * task download error.
      *
-     * @param exception exception info.{@link DownloadException}
+     * @param exception exception info.{@link SaultException}
      */
-    void onError(DownloadException exception);
+    void onError(SaultException exception);
 }
