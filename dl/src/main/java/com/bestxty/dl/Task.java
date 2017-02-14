@@ -16,7 +16,7 @@ import static com.bestxty.dl.Utils.log;
  */
 final class Task {
 
-    private static final int LENGTH_PER_THREAD = 1024 * 1024 * 10;
+    private static final int LENGTH_PER_THREAD = 1024 * 1024 * 10;      //10M
 
     private static final AtomicLong SUB_TASK_ID_GENERATOR = new AtomicLong();
 
@@ -91,6 +91,7 @@ final class Task {
     }
 
     void splitTask() {
+        subTaskList.clear();
 
         long threadSize;
         long threadLength = LENGTH_PER_THREAD;
@@ -142,9 +143,15 @@ final class Task {
             return endPosition;
         }
 
+        public boolean isDone() {
+            return finishedSize == (endPosition - startPosition) + 1;
+        }
+
+
         static SubTask create(long startPosition, long endPosition, long threadId) {
             return new SubTask(startPosition, endPosition, threadId);
         }
+
 
         @Override
         public String toString() {
@@ -155,6 +162,8 @@ final class Task {
                     .append(startPosition);
             sb.append(",\"endPosition\":")
                     .append(endPosition);
+            sb.append(",\"finishedSize\":")
+                    .append(finishedSize);
             sb.append('}');
             return sb.toString();
         }

@@ -38,6 +38,7 @@ import static com.bestxty.dl.Utils.ProgressInformer;
 import static com.bestxty.dl.Utils.THREAD_PREFIX;
 import static com.bestxty.dl.Utils.getService;
 import static com.bestxty.dl.Utils.hasPermission;
+import static com.bestxty.dl.Utils.log;
 
 /**
  * @author xty
@@ -142,6 +143,7 @@ class Dispatcher {
     }
 
     Future submit(Runnable runnable) {
+        log("Dispatcher.submit");
         return service.submit(runnable);
     }
 
@@ -150,7 +152,7 @@ class Dispatcher {
     }
 
     private void dispatchEvent(EventInformer eventInformer) {
-        System.out.println("dispatch event." + eventInformer.event);
+        log("dispatch event." + eventInformer.event);
         mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(TASK_EVENT, eventInformer));
     }
 
@@ -160,12 +162,12 @@ class Dispatcher {
     }
 
     void dispatchSubmit(Task task) {
-        System.out.println("dispatch submit.task=" + task.getKey());
+        log("dispatch submit.task=" + task.getKey());
         handler.sendMessage(handler.obtainMessage(TASK_SUBMIT, task));
     }
 
     void dispatchPauseTag(Object tag) {
-        System.out.println(String.format(Locale.CHINA, "dispatch pause. paused size=%d,paused tag=%d,failed size=%d,hunter size=%d.",
+        log(String.format(Locale.CHINA, "dispatch pause. paused size=%d,paused tag=%d,failed size=%d,hunter size=%d.",
                 pausedTaskMap.size(),
                 pausedTags.size(),
                 failedTaskMap.size(),
@@ -174,7 +176,7 @@ class Dispatcher {
     }
 
     void dispatchCancel(Task task) {
-        System.out.println("dispatch cancel.");
+        log("dispatch cancel.");
         handler.sendMessage(handler.obtainMessage(TASK_CANCEL, task));
     }
 
@@ -187,13 +189,13 @@ class Dispatcher {
     }
 
     void dispatchFailed(TaskHunter hunter) {
-        System.out.println("dispatch task failed. ex=" + hunter.getException().getMessage());
+        log("dispatch task failed. ex=" + hunter.getException().getMessage());
         hunter.getException().printStackTrace();
         handler.sendMessage(handler.obtainMessage(HUNTER_FAILED, hunter));
     }
 
     void dispatchRetry(TaskHunter hunter) {
-        System.out.println("dispatch task retry.ex=" + hunter.getException().getMessage());
+        log("dispatch task retry.ex=" + hunter.getException().getMessage());
         hunter.getException().printStackTrace();
         handler.sendMessageDelayed(handler.obtainMessage(HUNTER_RETRY, hunter), RETRY_DELAY);
     }
@@ -209,12 +211,12 @@ class Dispatcher {
 
 
     private void performSubmit(Task task) {
-        System.out.println("perform submit task,task=" + task.getKey());
+        log("perform submit task,task=" + task.getKey());
         TaskHunter hunter = buildTaskHunter(task);
         Future future = service.submit(hunter);
         hunter.setFuture(future);
         hunterMap.put(hunter.getKey(), hunter);
-        System.out.println("put hunter to hunter map. size=" + hunterMap.size());
+        log("put hunter to hunter map. size=" + hunterMap.size());
         dispatchEvent(EventInformer.fromTask(task, EVENT_START));
     }
 
@@ -227,11 +229,11 @@ class Dispatcher {
 
     private void performPause(Object tag) {
         if (!pausedTags.add(tag)) {
-            System.out.println("tag is already in paused tag set.");
+            log("tag is already in paused tag set.");
             return;
         }
 
-        System.out.println("ready pause task for tag:" + tag);
+        log("ready pause task for tag:" + tag);
         for (Iterator<TaskHunter> iterator = hunterMap.values().iterator(); iterator.hasNext(); ) {
             TaskHunter hunter = iterator.next();
             Task single = hunter.getTask();
@@ -240,26 +242,26 @@ class Dispatcher {
             }
 
             if (single.getTag().equals(tag)) {
-                System.out.println("find task");
-                System.out.println("detach task for hunter");
+                log("find task");
+                log("detach task for hunter");
                 if (hunter.cancel()) {
-                    System.out.println("cancel hunter");
+                    log("cancel hunter");
                     iterator.remove();
-                    System.out.println("put task to paused task map");
+                    log("put task to paused task map");
                     pausedTaskMap.put(single.getKey(), single);
                     dispatchEvent(EventInformer.fromTask(single, EVENT_PAUSE));
                 }
             }
         }
-        System.out.println("perform pause finish");
+        log("perform pause finish");
     }
 
     private void performResume(Object tag) {
         if (!pausedTags.remove(tag)) {
-            System.out.println("paused tag set not contain tag.");
+            log("paused tag set not contain tag.");
             return;
         }
-        System.out.println("ready resume task for tag:" + tag);
+        log("ready resume task for tag:" + tag);
         List<Task> batch = null;
         for (Iterator<Task> iterator = pausedTaskMap.values().iterator(); iterator.hasNext(); ) {
             Task task = iterator.next();
@@ -273,29 +275,29 @@ class Dispatcher {
         }
 
         if (batch != null) {
-            System.out.println("find need resumed task size=" + batch.size());
+            log("find need resumed task size=" + batch.size());
             mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(TASK_BATCH_RESUME, batch));
         } else {
-            System.out.println("not found need resumed task");
+            log("not found need resumed task");
         }
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
     private void performCancel(Task task) {
-        System.out.println("perform cancel.");
+        log("perform cancel.");
         String key = task.getKey();
         TaskHunter hunter = hunterMap.get(key);
         if (hunter != null) {
-            System.out.println("find hunter");
+            log("find hunter");
             if (hunter.cancel()) {
-                System.out.println("cancel hunter");
+                log("cancel hunter");
                 dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
                 hunterMap.remove(key);
             }
         }
 
         if (pausedTags.contains(task.getTag())) {
-            System.out.println("paused tags contain task");
+            log("paused tags contain task");
             pausedTaskMap.remove(key);
             pausedTags.remove(task.getTag());
             dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
@@ -303,7 +305,7 @@ class Dispatcher {
 
         Task remove = failedTaskMap.remove(key);
         if (remove != null) {
-            System.out.println("task removed from failed task map");
+            log("task removed from failed task map");
             dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
         }
     }

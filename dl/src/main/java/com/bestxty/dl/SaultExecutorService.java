@@ -111,12 +111,12 @@ class SaultExecutorService extends ThreadPoolExecutor {
         setMaximumPoolSize(threadCount);
     }
 
-//    @Override
-//    public Future<?> submit(Runnable task) {
-//        DownloadFutureTask ftask = new DownloadFutureTask((TaskHunter) task);
-//        execute(ftask);
-//        return ftask;
-//    }
+    @Override
+    public Future<?> submit(Runnable task) {
+        DownloadFutureTask ftask = new DownloadFutureTask((TaskHunter) task);
+        execute(ftask);
+        return ftask;
+    }
 
 
     private static final class DownloadFutureTask extends FutureTask<TaskHunter>
