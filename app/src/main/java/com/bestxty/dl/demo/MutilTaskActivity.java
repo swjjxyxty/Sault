@@ -1,8 +1,8 @@
 package com.bestxty.dl.demo;
 
+import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -10,9 +10,9 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import com.bestxty.dl.Callback;
-import com.bestxty.dl.DownloadException;
 import com.bestxty.dl.OkHttpDownloader;
 import com.bestxty.dl.Sault;
+import com.bestxty.dl.SaultException;
 import com.bestxty.dl.demo.adapter.TaskAdapter;
 import com.bestxty.dl.demo.bean.Task;
 
@@ -119,7 +119,7 @@ public class MutilTaskActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onError(DownloadException exception) {
+        public void onError(SaultException exception) {
 
         }
     }

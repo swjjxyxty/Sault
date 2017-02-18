@@ -9,9 +9,9 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.bestxty.dl.Callback;
-import com.bestxty.dl.DownloadException;
 import com.bestxty.dl.OkHttpDownloader;
 import com.bestxty.dl.Sault;
+import com.bestxty.dl.SaultException;
 
 import java.io.File;
 
@@ -97,7 +97,7 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
                             }
 
                             @Override
-                            public void onError(DownloadException exception) {
+                            public void onError(SaultException exception) {
                                 Log.d(TAG, "onError() called with: exception = [" + exception + "]");
                             }
                         })

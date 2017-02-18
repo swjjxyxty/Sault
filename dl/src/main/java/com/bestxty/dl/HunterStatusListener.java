@@ -8,5 +8,5 @@ interface HunterStatusListener {
 
     void onProgress(long progress);
 
-    void onFinish(SaultTaskHunter.InternalTaskHunter hunter);
+    void onFinish(TaskHunter hunter);
 }

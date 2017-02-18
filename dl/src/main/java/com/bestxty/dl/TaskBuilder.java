@@ -4,8 +4,6 @@ import android.net.Uri;
 
 import java.io.File;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-
 
 import static com.bestxty.dl.Sault.Priority;
 import static com.bestxty.dl.Utils.log;
@@ -16,7 +14,6 @@ import static com.bestxty.dl.Utils.log;
  */
 public class TaskBuilder {
 
-    private static final AtomicInteger ID_GENERATOR = new AtomicInteger();
 
     private Uri uri;
     private Sault sault;
@@ -103,7 +100,6 @@ public class TaskBuilder {
         Task task = new Task(sault, key, uri, target, tag, priority, callback,
                 multiThreadEnabled, breakPointEnabled);
 
-        task.id = ID_GENERATOR.incrementAndGet();
 
         sault.enqueueAndSubmit(task);
 

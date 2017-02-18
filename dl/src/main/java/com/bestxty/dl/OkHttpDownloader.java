@@ -72,6 +72,14 @@ public class OkHttpDownloader implements Downloader {
 
     @Override
     public Response load(Uri uri, long startPosition, long endPosition) throws IOException {
+        if (endPosition < startPosition) {
+            throw new IllegalArgumentException("end position must greater than start position.");
+        }
+
+        if (endPosition == 0L && startPosition >= 0L) {
+            return load(uri, startPosition);
+        }
+
         okhttp3.Response response = internalCall(new Request.Builder()
                 .header("Range", "bytes=" + startPosition + "-" + endPosition)
                 .url(uri.toString())
