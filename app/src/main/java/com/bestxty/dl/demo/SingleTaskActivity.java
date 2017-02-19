@@ -9,7 +9,6 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.bestxty.dl.Callback;
-import com.bestxty.dl.OkHttpDownloader;
 import com.bestxty.dl.Sault;
 import com.bestxty.dl.SaultException;
 
@@ -55,9 +54,9 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
 
         sault = new Sault.Builder(this)
                 .saveDir(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "dl_test")
-                .downloader(new OkHttpDownloader(new OkHttpClient.Builder()
+                .client(new OkHttpClient.Builder()
                         .addInterceptor(loggingInterceptor)
-                        .build()))
+                        .build())
                 .build();
 
     }
@@ -102,7 +101,7 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
                             }
                         })
                         .priority(Sault.Priority.HIGH)
-                        .multiThreadEnabled(true)
+                        .multiThreadEnabled(false)
                         .breakPointEnabled(true)
                         .go();
                 if (tag != null) {

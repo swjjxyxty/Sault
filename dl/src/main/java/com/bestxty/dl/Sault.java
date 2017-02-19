@@ -124,6 +124,10 @@ public final class Sault {
     }
 
     public Stats getStats() {
+        return dump();
+    }
+
+    private Stats dump() {
         Stats stats = dispatcher.getStats();
         stats.taskSize = taskMap.size();
         return stats;
@@ -211,6 +215,7 @@ public final class Sault {
         dispatcher.shutdown();
         HANDLER.removeCallbacksAndMessages(null);
     }
+
 
     public static class Builder {
 

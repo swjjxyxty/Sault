@@ -15,7 +15,7 @@ import okhttp3.ResponseBody;
  * @author xty
  *         Created by xty on 2016/12/7.
  */
-public class OkHttpDownloader implements Downloader {
+class OkHttpDownloader implements Downloader {
 
     private static OkHttpClient defaultOkHttpClient() {
         return new OkHttpClient.Builder()
@@ -27,11 +27,11 @@ public class OkHttpDownloader implements Downloader {
 
     private final OkHttpClient client;
 
-    public OkHttpDownloader() {
+    OkHttpDownloader() {
         this(defaultOkHttpClient());
     }
 
-    public OkHttpDownloader(OkHttpClient client) {
+    OkHttpDownloader(OkHttpClient client) {
         this.client = client;
     }
 
@@ -72,7 +72,8 @@ public class OkHttpDownloader implements Downloader {
 
     @Override
     public Response load(Uri uri, long startPosition, long endPosition) throws IOException {
-        if (endPosition < startPosition) {
+        if (endPosition > 0L
+                && endPosition < startPosition) {
             throw new IllegalArgumentException("end position must greater than start position.");
         }
 

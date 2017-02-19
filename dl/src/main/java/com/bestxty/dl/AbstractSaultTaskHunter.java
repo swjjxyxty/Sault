@@ -1,5 +1,8 @@
 package com.bestxty.dl;
 
+import com.bestxty.dl.Downloader.ContentLengthException;
+import com.bestxty.dl.Downloader.Response;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -10,6 +13,7 @@ import static com.bestxty.dl.Utils.THREAD_IDLE_NAME;
 import static com.bestxty.dl.Utils.closeQuietly;
 import static com.bestxty.dl.Utils.createTargetFile;
 import static com.bestxty.dl.Utils.log;
+import static java.lang.Thread.currentThread;
 
 /**
  * @author xty
@@ -28,7 +32,7 @@ abstract class AbstractSaultTaskHunter extends BaseSaultTaskHunter {
 
     abstract void onProgress(int length);
 
-    abstract void onStart();
+    abstract void onStart(long totalSize);
 
     abstract void onFinish();
 
@@ -40,11 +44,12 @@ abstract class AbstractSaultTaskHunter extends BaseSaultTaskHunter {
 
         final long endPosition = getEndPosition();
 
-        if (endPosition < startPosition) {
+        if (endPosition > 0L
+                && endPosition < startPosition) {
             throw new IllegalArgumentException("end position must greater than start position.");
         }
 
-        Downloader.Response response = downloader.load(task.getUri(), startPosition, endPosition);
+        Response response = downloader.load(task.getUri(), startPosition, endPosition);
 
         InputStream stream = response.stream;
         if (stream == null) {
@@ -54,8 +59,10 @@ abstract class AbstractSaultTaskHunter extends BaseSaultTaskHunter {
 
         if (response.contentLength == 0) {
             closeQuietly(stream);
-            throw new Downloader.ContentLengthException("Received response with 0 content-length header.");
+            throw new ContentLengthException("Received response with 0 content-length header.");
         }
+
+        onStart(response.contentLength);
 
         createTargetFile(task.getTarget());
 
@@ -83,14 +90,13 @@ abstract class AbstractSaultTaskHunter extends BaseSaultTaskHunter {
     public void run() {
         updateThreadName();
         try {
-            onStart();
             hunter();
             onFinish();
         } catch (Exception e) {
             setException(e);
             onError(e);
         } finally {
-            Thread.currentThread().setName(THREAD_IDLE_NAME);
+            currentThread().setName(THREAD_IDLE_NAME);
         }
     }
 

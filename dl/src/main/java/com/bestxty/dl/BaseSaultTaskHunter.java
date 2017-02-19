@@ -1,7 +1,11 @@
 package com.bestxty.dl;
 
+import com.bestxty.dl.Sault.Priority;
+
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.Thread.currentThread;
 
 /**
  * @author xty
@@ -12,7 +16,8 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
     private static final AtomicInteger SEQUENCE_GENERATOR = new AtomicInteger();
 
     private static final ThreadLocal<StringBuilder> NAME_BUILDER = new ThreadLocal<StringBuilder>() {
-        @Override protected StringBuilder initialValue() {
+        @Override
+        protected StringBuilder initialValue() {
             return new StringBuilder(Utils.THREAD_PREFIX);
         }
     };
@@ -23,12 +28,13 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
 
     protected final Task task;
 
-    protected final Downloader downloader;
+    final Downloader downloader;
 
     final Dispatcher dispatcher;
 
     private Exception exception;
     private Future<?> future;
+
 
     BaseSaultTaskHunter(Sault sault,
                         Dispatcher dispatcher,
@@ -56,7 +62,7 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
         builder.ensureCapacity(Utils.THREAD_PREFIX.length() + name.length());
         builder.replace(Utils.THREAD_PREFIX.length(), builder.length(), name);
 
-        Thread.currentThread().setName(builder.toString());
+        currentThread().setName(builder.toString());
     }
 
     protected void setException(Exception exception) {
@@ -85,7 +91,7 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
     }
 
     @Override
-    public Sault.Priority getPriority() {
+    public Priority getPriority() {
         return task.getPriority();
     }
 

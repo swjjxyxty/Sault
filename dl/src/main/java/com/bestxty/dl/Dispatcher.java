@@ -106,6 +106,7 @@ class Dispatcher {
         this.failedTaskMap = new HashMap<>();
         this.pausedTags = new HashSet<>();
         this.batch = new ArrayList<>(4);
+
         this.airplaneMode = Utils.isAirplaneModeOn(this.context);
         this.scansNetworkChanges = hasPermission(context, ACCESS_NETWORK_STATE);
         this.receiver = new NetworkBroadcastReceiver(this);
@@ -117,7 +118,7 @@ class Dispatcher {
     }
 
     void shutdown() {
-        // Shutdown the thread pool only if it is the one created by Picasso.
+        // Shutdown the thread pool only if it is the one created by Sault.
         if (service instanceof SaultExecutorService) {
             service.shutdown();
         }
@@ -142,11 +143,23 @@ class Dispatcher {
         stats.failedTaskSize = failedTaskMap.size();
         stats.pausedTagSize = pausedTags.size();
         stats.pausedTaskSize = pausedTaskMap.size();
+        if (service instanceof SaultExecutorService) {
+
+            SaultExecutorService executorService = (SaultExecutorService) service;
+            stats.activeCount = executorService.getActiveCount();
+            stats.corePoolSize = executorService.getCorePoolSize();
+            stats.largestPoolSize = executorService.getLargestPoolSize();
+            stats.maximumPoolSize = executorService.getMaximumPoolSize();
+            stats.poolSize = executorService.getPoolSize();
+
+            stats.taskCount = executorService.getTaskCount();
+            stats.completeTaskCount = executorService.getCompletedTaskCount();
+        }
+
         return stats;
     }
 
     Future submit(Runnable runnable) {
-        log("Dispatcher.submit");
         return service.submit(runnable);
     }
 
@@ -155,7 +168,6 @@ class Dispatcher {
     }
 
     private void dispatchEvent(EventInformer eventInformer) {
-        log("dispatch event." + eventInformer.event);
         mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(TASK_EVENT, eventInformer));
     }
 
@@ -165,7 +177,6 @@ class Dispatcher {
     }
 
     void dispatchSubmit(Task task) {
-        log("dispatch submit.task=" + task.getKey());
         handler.sendMessage(handler.obtainMessage(TASK_SUBMIT, task));
     }
 
@@ -191,12 +202,14 @@ class Dispatcher {
         handler.sendMessage(handler.obtainMessage(HUNTER_COMPLETE, hunter));
     }
 
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     void dispatchFailed(TaskHunter hunter) {
         log("dispatch task failed. ex=" + hunter.getException().getMessage());
         hunter.getException().printStackTrace();
         handler.sendMessage(handler.obtainMessage(HUNTER_FAILED, hunter));
     }
 
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     void dispatchRetry(TaskHunter hunter) {
         log("dispatch task retry.ex=" + hunter.getException().getMessage());
         hunter.getException().printStackTrace();
@@ -386,7 +399,7 @@ class Dispatcher {
     }
 
     private void performNetworkStateChange(NetworkInfo info) {
-        if (service instanceof SaultExecutorService) {
+        if (service instanceof SaultExecutorService && isAutoAdjustThreadEnabled()) {
             ((SaultExecutorService) service).adjustThreadCount(info);
         }
         // Intentionally check only if isConnected() here before we flush out failed actions.

@@ -10,7 +10,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import com.bestxty.dl.Callback;
-import com.bestxty.dl.OkHttpDownloader;
 import com.bestxty.dl.Sault;
 import com.bestxty.dl.SaultException;
 import com.bestxty.dl.demo.adapter.TaskAdapter;
@@ -46,9 +45,9 @@ public class MutilTaskActivity extends AppCompatActivity {
 
         sault = new Sault.Builder(this)
                 .saveDir(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "dl_test")
-                .downloader(new OkHttpDownloader(new OkHttpClient.Builder()
+                .client(new OkHttpClient.Builder()
                         .addInterceptor(loggingInterceptor)
-                        .build()))
+                        .build())
                 .build();
 
         initTaskList();

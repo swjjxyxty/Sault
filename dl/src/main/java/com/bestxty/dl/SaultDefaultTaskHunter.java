@@ -2,6 +2,8 @@ package com.bestxty.dl;
 
 import android.net.NetworkInfo;
 
+import com.bestxty.dl.Utils.ProgressInformer;
+
 /**
  * @author xty
  *         Created by xty on 2017/2/18.
@@ -15,15 +17,20 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
     private long endPosition = DEFAULT_END_POSITION;
 
     private HunterStatusListener listener;
+    private ProgressInformer progressInformer;
 
     SaultDefaultTaskHunter(Sault sault,
                            Dispatcher dispatcher,
                            Task task,
                            Downloader downloader) {
         super(sault, dispatcher, task, downloader);
+        progressInformer = new ProgressInformer(task.getTag(), task.getCallback());
+
         if (isNeedResume()) {
             startPosition = task.finishedSize;
         }
+
+
     }
 
 
@@ -59,27 +66,28 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
         }
 
         task.finishedSize += length;
-        Utils.ProgressInformer progress = new Utils.ProgressInformer(task.getTag(), task.getCallback());
-        progress.totalSize = task.totalSize;
-        progress.finishedSize = task.finishedSize;
-        dispatcher.dispatchProgress(progress);
+        progressInformer.finishedSize = task.finishedSize;
+        dispatcher.dispatchProgress(progressInformer);
 
 
     }
 
     @Override
-    void onStart() {
-
+    void onStart(long totalSize) {
+        task.totalSize = totalSize;
+        progressInformer.totalSize = totalSize;
     }
 
     @Override
     void onFinish() {
-        listener.onFinish(this);
+        if (listener != null)
+            listener.onFinish(this);
     }
 
     @Override
     void onError(Exception exception) {
-
+        exception.printStackTrace();
+        dispatcher.dispatchFailed(this);
     }
 
     @Override

@@ -2,6 +2,8 @@ package com.bestxty.dl;
 
 import android.net.NetworkInfo;
 
+import com.bestxty.dl.Utils.ProgressInformer;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +11,7 @@ import java.util.concurrent.Future;
 
 import static com.bestxty.dl.Utils.THREAD_IDLE_NAME;
 import static com.bestxty.dl.Utils.log;
+import static java.lang.Thread.currentThread;
 
 /**
  * @author xty
@@ -21,27 +24,22 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
 
     private List<TaskHunter> taskHunterList;
 
+    private ProgressInformer progressInformer;
+
     SaultMultiPartTaskHunter(Sault sault, Dispatcher dispatcher, Task task, Downloader downloader) {
         super(sault, dispatcher, task, downloader);
         taskHunterList = new ArrayList<>();
+        progressInformer = new ProgressInformer(task.getTag(), task.getCallback());
     }
 
 
     @Override
     public void onProgress(long length) {
         task.finishedSize += length;
-        Utils.ProgressInformer progress = new Utils.ProgressInformer(task.getTag(), task.getCallback());
-
-        progress.totalSize = task.totalSize;
-
-        progress.finishedSize = task.finishedSize;
-        dispatcher.dispatchProgress(progress);
+        progressInformer.finishedSize = task.finishedSize;
+        dispatcher.dispatchProgress(progressInformer);
     }
 
-//    @Override
-//    public void onFinish(SaultTaskHunter.InternalTaskHunter hunter) {
-//
-//    }
 
     @Override
     public void onFinish(TaskHunter hunter) {
@@ -51,6 +49,8 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
             task.endTime = System.nanoTime();
             dispatcher.dispatchComplete(this);
         }
+
+        progressInformer = null;
     }
 
     private void calculateTaskCount() throws IOException {
@@ -59,6 +59,7 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
         long totalSize = downloader.fetchContentLength(task.getUri());
 
         task.totalSize = totalSize;
+        progressInformer.totalSize = totalSize;
 
         long threadSize;
         long threadLength = LENGTH_PER_THREAD;
@@ -106,8 +107,8 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
         } catch (Exception e) {
             e.printStackTrace();
             setException(e);
-        }finally {
-            Thread.currentThread().setName(THREAD_IDLE_NAME);
+        } finally {
+            currentThread().setName(THREAD_IDLE_NAME);
         }
     }
 
