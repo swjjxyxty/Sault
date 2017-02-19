@@ -4,7 +4,7 @@
     android:id="@+id/activity_mutil_task"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.bestxty.dl.demo.MutilTaskActivity">
+    tools:context="com.bestxty.sault.demo.MutilTaskActivity">
 
     <ListView
         android:id="@+id/listview"
