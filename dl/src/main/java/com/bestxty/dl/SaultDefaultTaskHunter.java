@@ -74,14 +74,23 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
 
     @Override
     void onStart(long totalSize) {
-        task.totalSize = totalSize;
-        progressInformer.totalSize = totalSize;
+        if (!isNeedResume()) {
+            task.totalSize = totalSize;
+        }
+
+        progressInformer.totalSize = task.totalSize;
     }
 
     @Override
     void onFinish() {
-        if (listener != null)
+        if (listener != null) {
             listener.onFinish(this);
+            return;
+        }
+
+        dispatcher.dispatchComplete(this);
+
+        progressInformer = null;
     }
 
     @Override
