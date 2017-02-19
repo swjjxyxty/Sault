@@ -21,7 +21,7 @@ import static android.provider.Settings.System.AIRPLANE_MODE_ON;
  */
 final class Utils {
 
-    static final String TAG = "Sault";
+    private static final String TAG = "Sault";
     static final String THREAD_PREFIX = "Sault-";
     static final String DISPATCHER_THREAD_NAME = "Dispatcher";
     static final String THREAD_IDLE_NAME = THREAD_PREFIX + "Idle";

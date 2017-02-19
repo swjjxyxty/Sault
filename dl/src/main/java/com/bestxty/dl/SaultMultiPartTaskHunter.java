@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import static com.bestxty.dl.Utils.THREAD_IDLE_NAME;
 import static com.bestxty.dl.Utils.log;
 
 /**
@@ -83,8 +84,9 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
 
     @Override
     public void run() {
+        updateThreadName();
         try {
-            if (isNeedResume()) {
+            if (!isNeedResume()) {
                 calculateTaskCount();
             }
 
@@ -104,6 +106,8 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
         } catch (Exception e) {
             e.printStackTrace();
             setException(e);
+        }finally {
+            Thread.currentThread().setName(THREAD_IDLE_NAME);
         }
     }
 

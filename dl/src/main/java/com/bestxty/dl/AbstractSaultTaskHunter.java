@@ -6,6 +6,7 @@ import java.io.RandomAccessFile;
 
 import static com.bestxty.dl.Utils.DEFAULT_BUFFER_SIZE;
 import static com.bestxty.dl.Utils.EOF;
+import static com.bestxty.dl.Utils.THREAD_IDLE_NAME;
 import static com.bestxty.dl.Utils.closeQuietly;
 import static com.bestxty.dl.Utils.createTargetFile;
 import static com.bestxty.dl.Utils.log;
@@ -80,6 +81,7 @@ abstract class AbstractSaultTaskHunter extends BaseSaultTaskHunter {
 
     @Override
     public void run() {
+        updateThreadName();
         try {
             onStart();
             hunter();
@@ -87,6 +89,8 @@ abstract class AbstractSaultTaskHunter extends BaseSaultTaskHunter {
         } catch (Exception e) {
             setException(e);
             onError(e);
+        } finally {
+            Thread.currentThread().setName(THREAD_IDLE_NAME);
         }
     }
 

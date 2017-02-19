@@ -11,6 +11,12 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
 
     private static final AtomicInteger SEQUENCE_GENERATOR = new AtomicInteger();
 
+    private static final ThreadLocal<StringBuilder> NAME_BUILDER = new ThreadLocal<StringBuilder>() {
+        @Override protected StringBuilder initialValue() {
+            return new StringBuilder(Utils.THREAD_PREFIX);
+        }
+    };
+
     private final int sequence;
 
     private final Sault sault;
@@ -40,6 +46,17 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
         return task.finishedSize != 0
                 && task.isBreakPointEnabled()
                 && downloader.supportBreakPoint();
+    }
+
+
+    void updateThreadName() {
+        String name = task.getName();
+
+        StringBuilder builder = NAME_BUILDER.get();
+        builder.ensureCapacity(Utils.THREAD_PREFIX.length() + name.length());
+        builder.replace(Utils.THREAD_PREFIX.length(), builder.length(), name);
+
+        Thread.currentThread().setName(builder.toString());
     }
 
     protected void setException(Exception exception) {

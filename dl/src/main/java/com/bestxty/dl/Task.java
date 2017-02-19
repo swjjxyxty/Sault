@@ -60,6 +60,12 @@ final class Task {
         this.endPosition = endPosition;
     }
 
+    String getName() {
+        if (uri != null) {
+            return String.valueOf(uri.getPath());
+        }
+        return String.valueOf(id);
+    }
 
     boolean isMultiThreadEnabled() {
         return multiThreadEnabled;

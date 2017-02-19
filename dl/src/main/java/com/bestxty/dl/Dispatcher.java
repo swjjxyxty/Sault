@@ -233,23 +233,6 @@ class Dispatcher {
 
     }
 
-//    private void performSubmit2(Task task) {
-//        log("perform submit task,task=" + task.getKey());
-//        TaskHunter hunter = buildTaskHunter(task);
-//        Future future = service.submit(hunter);
-//        hunter.setFuture(future);
-//        hunterMap.put(hunter.getKey(), hunter);
-//        log("put hunter to hunter map. size=" + hunterMap.size());
-//        dispatchEvent(EventInformer.fromTask(task, EVENT_START));
-//    }
-//
-//    private TaskHunter buildTaskHunter(Task task) {
-////        if (task.isMultiThreadEnabled()) {
-////            return new MultiThreadTaskHunter(task, downloader, this);
-////        }
-//        return new SaultTaskHunter(task.getSault(), this, task, downloader);
-//    }
-
     private void performPause(Object tag) {
         if (!pausedTags.add(tag)) {
             log("tag is already in paused tag set.");
