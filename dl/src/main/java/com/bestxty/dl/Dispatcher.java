@@ -121,6 +121,9 @@ class Dispatcher {
         if (service instanceof SaultExecutorService) {
             service.shutdown();
         }
+
+        handler.removeCallbacksAndMessages(null);
+
         dispatcherThread.quit();
 //         Unregister network broadcast receiver on the main thread.
         Sault.HANDLER.post(new Runnable() {
