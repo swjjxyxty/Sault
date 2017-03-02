@@ -50,14 +50,6 @@ class OkHttpDownloader implements Downloader {
         return new Response(body.byteStream(), body.contentLength());
     }
 
-    @Override
-    public Response load(Uri uri) throws IOException {
-        okhttp3.Response response = internalCall(new Request.Builder()
-                .url(uri.toString())
-                .build());
-
-        return handleResponse(response);
-    }
 
     @Override
     public Response load(Uri uri, long startPosition) throws IOException {
@@ -107,12 +99,7 @@ class OkHttpDownloader implements Downloader {
 
     @Override
     public boolean shouldRetry(boolean airplaneMode, NetworkInfo info) {
-        return info == null || info.isConnected();
-    }
-
-    @Override
-    public boolean supportsReplay() {
-        return true;
+        return !airplaneMode && (info == null || info.isConnected());
     }
 
     @Override

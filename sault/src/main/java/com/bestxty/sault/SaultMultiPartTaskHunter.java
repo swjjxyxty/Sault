@@ -1,6 +1,7 @@
 package com.bestxty.sault;
 
 import android.net.NetworkInfo;
+import android.util.Log;
 
 import com.bestxty.sault.Utils.ProgressInformer;
 
@@ -48,9 +49,9 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
         if (taskHunterList.isEmpty()) {
             task.endTime = System.nanoTime();
             dispatcher.dispatchComplete(this);
+            progressInformer = null;
         }
 
-        progressInformer = null;
     }
 
     private void calculateTaskCount() throws IOException {
@@ -58,6 +59,7 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
         List<Task> subTaskList = task.getSubTaskList();
         long totalSize = downloader.fetchContentLength(task.getUri());
 
+        Log.d("Sault", "totalSize:" + totalSize);
         task.totalSize = totalSize;
         progressInformer.totalSize = totalSize;
 
@@ -69,7 +71,6 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
         } else {
             threadSize = totalSize / LENGTH_PER_THREAD;
         }
-        log(threadSize + "------x");
         long remainder = totalSize % threadLength;
         for (int i = 0; i < threadSize; i++) {
             long start = i * threadLength;
@@ -89,6 +90,9 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
         try {
             if (!isNeedResume()) {
                 calculateTaskCount();
+            } else {
+                progressInformer.totalSize = task.totalSize;
+                Log.d("Sault", "progressInformer.totalSize:" + progressInformer.totalSize);
             }
 
             for (Task subTask : task.getSubTaskList()) {
@@ -97,7 +101,7 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
                     log("subtask is done break. " + subTask.toString());
                     continue;
                 }
-                TaskHunter taskHunter = new SaultDefaultTaskHunter(task.getSault(), dispatcher, task,
+                TaskHunter taskHunter = new SaultDefaultTaskHunter(task.getSault(), dispatcher, subTask,
                         downloader, this, subTask.getStartPosition(), subTask.getEndPosition());
 
                 taskHunterList.add(taskHunter);

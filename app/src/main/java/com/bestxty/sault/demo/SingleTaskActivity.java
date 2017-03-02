@@ -65,7 +65,9 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btn_start:
-                tag = sault.load("http://192.168.99.200:8000/WeChat_C1018.exe")
+                //http://download.ydstatic.cn/cidian/static/7.0/20170222/YoudaoDictSetup.exe
+//                tag = sault.load("http://192.168.99.200:8000/WeChat_C1018.exe")
+                tag = sault.load("http://download.ydstatic.cn/cidian/static/7.0/20170222/YoudaoDictSetup.exe")
                         .tag("test-task")
                         .listener(new Callback() {
                             @Override
@@ -86,8 +88,12 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
 
                             @Override
                             public void onProgress(Object tag, long totalSize, long finishedSize) {
-                                int progress = (int) (finishedSize * 100 / totalSize);
-                                progressBar.setProgress(progress);
+                                try {
+                                    int progress = (int) (finishedSize * 100 / totalSize);
+                                    progressBar.setProgress(progress);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
 
                             @Override
@@ -98,10 +104,12 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
                             @Override
                             public void onError(SaultException exception) {
                                 Log.d(TAG, "onError() called with: exception = [" + exception + "]");
+                                enableStartBtn();
+                                System.out.println(sault.getStats());
                             }
                         })
                         .priority(Sault.Priority.HIGH)
-                        .multiThreadEnabled(false)
+                        .multiThreadEnabled(true)
                         .breakPointEnabled(true)
                         .go();
                 if (tag != null) {
@@ -141,7 +149,7 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
         startBtn.setEnabled(false);
         pauseBtn.setEnabled(false);
         resumeBtn.setEnabled(true);
-        cancelBtn.setEnabled(false);
+        cancelBtn.setEnabled(true);
     }
 
     private void enablePauseAndCancelBtn() {

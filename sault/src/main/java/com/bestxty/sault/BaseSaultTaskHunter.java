@@ -1,10 +1,14 @@
 package com.bestxty.sault;
 
+import android.net.NetworkInfo;
+import android.util.Log;
+
 import com.bestxty.sault.Sault.Priority;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.bestxty.sault.Utils.log;
 import static java.lang.Thread.currentThread;
 
 /**
@@ -34,6 +38,7 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
 
     private Exception exception;
     private Future<?> future;
+    private int retryCount;
 
 
     BaseSaultTaskHunter(Sault sault,
@@ -45,6 +50,7 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
         this.task = task;
         this.downloader = downloader;
         this.sequence = SEQUENCE_GENERATOR.incrementAndGet();
+        this.retryCount = downloader.getRetryCount();
     }
 
 
@@ -56,11 +62,14 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
 
 
     void updateThreadName() {
-        String name = task.getName();
+
+        String name = task.getName() + "-" + task.id;
 
         StringBuilder builder = NAME_BUILDER.get();
         builder.ensureCapacity(Utils.THREAD_PREFIX.length() + name.length());
         builder.replace(Utils.THREAD_PREFIX.length(), builder.length(), name);
+
+        log(builder.toString());
 
         currentThread().setName(builder.toString());
     }
@@ -79,6 +88,15 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
         return future != null && future.isCancelled();
     }
 
+    @Override
+    public boolean shouldRetry(boolean airplaneMode, NetworkInfo info) {
+        boolean hasRetries = retryCount > 0;
+        if (!hasRetries) {
+            return false;
+        }
+        retryCount--;
+        return downloader.shouldRetry(airplaneMode, info);
+    }
 
     @Override
     public void setFuture(Future<?> future) {

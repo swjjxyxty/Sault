@@ -14,18 +14,32 @@ import java.io.InputStream;
 public interface Downloader {
 
     /**
-     * load resource create uri.
+     * load resource from uri.
      *
-     * @param uri uri
+     * @param uri           uri
+     * @param startPosition resource start position
      * @return response {@link Response}
      * @throws IOException
      */
-    Response load(Uri uri) throws IOException;
-
     Response load(Uri uri, long startPosition) throws IOException;
 
+    /**
+     * load resource from uri.
+     *
+     * @param uri           uri
+     * @param startPosition resource start position
+     * @param endPosition   resource end position
+     * @return response {@link Response}
+     * @throws IOException
+     */
     Response load(Uri uri, long startPosition, long endPosition) throws IOException;
 
+    /**
+     * detect uri resource content length
+     *
+     * @param uri uri
+     * @throws IOException
+     */
     long fetchContentLength(Uri uri) throws IOException;
 
     /**
@@ -36,13 +50,6 @@ public interface Downloader {
      * @return if can retry to return true.otherwise return false.
      */
     boolean shouldRetry(boolean airplaneMode, NetworkInfo info);
-
-    /**
-     * judge downloader supports replay.
-     *
-     * @return if supports replay return true.
-     */
-    boolean supportsReplay();
 
     /**
      * judge downloader supports break point.

@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import com.bestxty.sault.Utils.Informer;
 
@@ -37,7 +38,6 @@ import static com.bestxty.sault.Utils.DISPATCHER_THREAD_NAME;
 import static com.bestxty.sault.Utils.ErrorInformer;
 import static com.bestxty.sault.Utils.EventInformer;
 import static com.bestxty.sault.Utils.ProgressInformer;
-import static com.bestxty.sault.Utils.THREAD_PREFIX;
 import static com.bestxty.sault.Utils.getService;
 import static com.bestxty.sault.Utils.hasPermission;
 import static com.bestxty.sault.Utils.log;
@@ -69,7 +69,7 @@ class Dispatcher {
     static final int AIRPLANE_MODE_CHANGE = 14;
 
     private static final int BATCH_DELAY = 200; // ms
-    private static final int RETRY_DELAY = 500;
+    private static final int RETRY_DELAY = 1000;
 
 
     private static final int AIRPLANE_MODE_ON = 1;
@@ -81,7 +81,6 @@ class Dispatcher {
     private final Handler mainThreadHandler;
     private final Map<String, TaskHunter> hunterMap;
     private final Map<String, Task> pausedTaskMap;
-    private final Map<String, Task> failedTaskMap;
     private final Downloader downloader;
     private final Set<Object> pausedTags;
     private final List<TaskHunter> batchComplete;
@@ -109,7 +108,6 @@ class Dispatcher {
         this.handler = new DispatcherHandler(dispatcherThread.getLooper(), this);
         this.hunterMap = new LinkedHashMap<>();
         this.pausedTaskMap = new HashMap<>();
-        this.failedTaskMap = new HashMap<>();
         this.pausedTags = new HashSet<>();
         this.batchComplete = new ArrayList<>(4);
         this.batchCancel = new ArrayList<>(4);
@@ -127,7 +125,7 @@ class Dispatcher {
     void shutdown() {
         // Shutdown the thread pool only if it is the one created by Sault.
         if (service instanceof SaultExecutorService) {
-            service.shutdown();
+            service.shutdownNow();
         }
 
         handler.removeCallbacksAndMessages(null);
@@ -147,7 +145,6 @@ class Dispatcher {
         Stats stats = new Stats();
         stats.hunterMapSize = hunterMap.size();
         stats.batchSize = batchComplete.size();
-        stats.failedTaskSize = failedTaskMap.size();
         stats.pausedTagSize = pausedTags.size();
         stats.pausedTaskSize = pausedTaskMap.size();
         if (service instanceof SaultExecutorService) {
@@ -192,10 +189,9 @@ class Dispatcher {
     }
 
     void dispatchPauseTag(Object tag) {
-        log(String.format(Locale.CHINA, "dispatch pause. paused size=%d,paused tag=%d,failed size=%d,hunter size=%d.",
+        log(String.format(Locale.CHINA, "dispatch pause. paused size=%d,paused tag=%d,hunter size=%d.",
                 pausedTaskMap.size(),
                 pausedTags.size(),
-                failedTaskMap.size(),
                 hunterMap.size()));
         handler.sendMessage(handler.obtainMessage(TASK_PAUSE, tag));
     }
@@ -216,14 +212,12 @@ class Dispatcher {
     @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     void dispatchFailed(TaskHunter hunter) {
         log("dispatch task failed. ex=" + hunter.getException().getMessage());
-        hunter.getException().printStackTrace();
         handler.sendMessage(handler.obtainMessage(HUNTER_FAILED, hunter));
     }
 
     @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     void dispatchRetry(TaskHunter hunter) {
         log("dispatch task retry.ex=" + hunter.getException().getMessage());
-        hunter.getException().printStackTrace();
         handler.sendMessageDelayed(handler.obtainMessage(HUNTER_RETRY, hunter), RETRY_DELAY);
     }
 
@@ -338,12 +332,6 @@ class Dispatcher {
             batchCancel(task);
         }
 
-        Task remove = failedTaskMap.remove(key);
-        if (remove != null) {
-            log("task removed create failed task map");
-            batchCancel(task);
-            dispatchEvent(EventInformer.create(task, EVENT_CANCEL));
-        }
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
@@ -364,7 +352,10 @@ class Dispatcher {
 
 
     private void performRetry(TaskHunter hunter) {
-        if (hunter.isCancelled()) return;
+        if (hunter.isCancelled()) {
+            log("hunter cancelled");
+            return;
+        }
 
         if (service.isShutdown()) {
             performError(hunter);
@@ -377,16 +368,20 @@ class Dispatcher {
             networkInfo = connectivityManager.getActiveNetworkInfo();
         }
 
+        log("airplan mode =" + airplaneMode);
+
         boolean hasConnectivity = networkInfo != null && networkInfo.isConnected();
         boolean shouldRetryHunter = hunter.shouldRetry(airplaneMode, networkInfo);
-//        boolean supportsReplay = hunter.supportsReplay();
 
+        log("should retry hunter=" + shouldRetryHunter);
 
         if (!shouldRetryHunter) {
             performError(hunter);
             return;
         }
 
+        log("has connectivity=" + hasConnectivity);
+        log("scansNetworkChanges=" + scansNetworkChanges);
 
         // If we don't scan for network changes (missing permission) or if we have connectivity, retry.
         if (!scansNetworkChanges || hasConnectivity) {
@@ -397,12 +392,10 @@ class Dispatcher {
 
         performError(hunter);
 
-//        if (supportsReplay) {
-//            markForReplay(hunter);
-//        }
     }
 
     private void performError(TaskHunter hunter) {
+
         hunterMap.remove(hunter.getKey());
         dispatchError(ErrorInformer.create(hunter.getTask().getCallback(),
                 new SaultException(hunter.getKey(),
@@ -413,16 +406,14 @@ class Dispatcher {
 
 
     private void performAirplaneModeChange(boolean airplaneMode) {
+        Log.d("Sault", "performAirplaneModeChange() called with: airplaneMode = [" + airplaneMode + "]");
         this.airplaneMode = airplaneMode;
     }
 
     private void performNetworkStateChange(NetworkInfo info) {
+        Log.d("Sault", "performNetworkStateChange() called with: info = [" + info + "]");
         if (service instanceof SaultExecutorService && isAutoAdjustThreadEnabled()) {
             ((SaultExecutorService) service).adjustThreadCount(info);
-        }
-        // Intentionally check only if isConnected() here before we flush out failed actions.
-        if (info != null && info.isConnected()) {
-//            flushFailedActions();
         }
     }
 
@@ -482,7 +473,8 @@ class Dispatcher {
                 }
                 case HUNTER_FAILED: {
                     TaskHunter hunter = (TaskHunter) msg.obj;
-                    dispatcher.performError(hunter);
+                    if (!hunter.isCancelled())
+                        dispatcher.performError(hunter);
                     break;
                 }
                 case HUNTER_RETRY: {
@@ -517,7 +509,7 @@ class Dispatcher {
 
     private static class DispatcherThread extends HandlerThread {
         DispatcherThread() {
-            super(THREAD_PREFIX + DISPATCHER_THREAD_NAME, THREAD_PRIORITY_BACKGROUND);
+            super(DISPATCHER_THREAD_NAME, THREAD_PRIORITY_BACKGROUND);
         }
     }
 

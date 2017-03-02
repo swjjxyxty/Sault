@@ -22,7 +22,7 @@ final class Utils {
 
     private static final String TAG = "Sault";
     static final String THREAD_PREFIX = "Sault-";
-    static final String DISPATCHER_THREAD_NAME = "Dispatcher";
+    static final String DISPATCHER_THREAD_NAME = THREAD_PREFIX + "Dispatcher";
     static final String THREAD_IDLE_NAME = THREAD_PREFIX + "Idle";
 
 
@@ -46,7 +46,6 @@ final class Utils {
             // ignore
         }
     }
-
 
     static void createTargetFile(File file) throws IOException {
         if (file.exists()) {
@@ -186,8 +185,10 @@ final class Utils {
     }
 
     private static class DownloadThread extends Thread {
+
+
         DownloadThread(Runnable runnable) {
-            super(runnable);
+            super(runnable, THREAD_IDLE_NAME);
         }
 
         @Override

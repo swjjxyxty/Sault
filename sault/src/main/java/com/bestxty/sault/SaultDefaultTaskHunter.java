@@ -1,6 +1,6 @@
 package com.bestxty.sault;
 
-import android.net.NetworkInfo;
+import android.util.Log;
 
 import com.bestxty.sault.Utils.ProgressInformer;
 
@@ -24,13 +24,11 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
                            Task task,
                            Downloader downloader) {
         super(sault, dispatcher, task, downloader);
-        progressInformer =  ProgressInformer.create(task);
+        progressInformer = ProgressInformer.create(task);
 
         if (isNeedResume()) {
             startPosition = task.finishedSize;
         }
-
-
     }
 
 
@@ -42,8 +40,9 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
                            long startPosition,
                            long endPosition) {
         super(sault, dispatcher, task, downloader);
+
         this.listener = listener;
-        this.startPosition = startPosition;
+        this.startPosition = startPosition + task.finishedSize;
         this.endPosition = endPosition;
     }
 
@@ -60,12 +59,13 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
     @Override
     void onProgress(int length) {
 
+        task.finishedSize += length;
+
         if (listener != null) {
             listener.onProgress(length);
             return;
         }
 
-        task.finishedSize += length;
         progressInformer.finishedSize = task.finishedSize;
         dispatcher.dispatchProgress(progressInformer);
 
@@ -78,12 +78,16 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
             task.totalSize = totalSize;
         }
 
+        if (listener != null) {
+            return;
+        }
         progressInformer.totalSize = task.totalSize;
     }
 
     @Override
     void onFinish() {
         if (listener != null) {
+            Log.d("Sault", "task:" + task);
             listener.onFinish(this);
             return;
         }
@@ -99,8 +103,4 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
         dispatcher.dispatchFailed(this);
     }
 
-    @Override
-    public boolean shouldRetry(boolean airplaneMode, NetworkInfo info) {
-        return false;
-    }
 }

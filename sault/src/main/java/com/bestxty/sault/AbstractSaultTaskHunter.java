@@ -2,9 +2,11 @@ package com.bestxty.sault;
 
 import com.bestxty.sault.Downloader.ContentLengthException;
 import com.bestxty.sault.Downloader.Response;
+import com.bestxty.sault.Downloader.ResponseException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
 
 import static com.bestxty.sault.Utils.DEFAULT_BUFFER_SIZE;
@@ -92,12 +94,19 @@ abstract class AbstractSaultTaskHunter extends BaseSaultTaskHunter {
         try {
             hunter();
             onFinish();
+        } catch (InterruptedIOException | ResponseException e) {
+            setException(e);
+            onError(e);
+        } catch (IOException e) {
+            setException(e);
+            dispatcher.dispatchRetry(this);
         } catch (Exception e) {
             setException(e);
             onError(e);
         } finally {
             currentThread().setName(THREAD_IDLE_NAME);
         }
+
     }
 
 }
