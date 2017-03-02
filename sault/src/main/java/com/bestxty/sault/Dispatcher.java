@@ -11,6 +11,8 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
+import com.bestxty.sault.Utils.Informer;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,17 +53,20 @@ class Dispatcher {
     static final int TASK_PAUSE = 2;
     static final int TASK_RESUME = 3;
     static final int TASK_CANCEL = 4;
-    static final int TASK_EVENT = 5;
-    static final int HUNTER_COMPLETE = 6;
-    static final int HUNTER_FAILED = 7;
-    static final int HUNTER_RETRY = 8;
-    static final int TASK_BATCH_RESUME = 9;
-    static final int HUNTER_DELAY_NEXT_BATCH = 10;
-    static final int HUNTER_BATCH_COMPLETE = 11;
-    static final int HUNTER_PROGRESS = 12;
-    static final int HUNTER_ERROR = 13;
-    static final int NETWORK_STATE_CHANGE = 14;
-    static final int AIRPLANE_MODE_CHANGE = 15;
+
+    static final int HUNTER_COMPLETE = 5;
+    static final int HUNTER_FAILED = 6;
+    static final int HUNTER_RETRY = 7;
+
+    static final int TASK_BATCH_RESUME = 8;
+
+    static final int HUNTER_DELAY_NEXT_BATCH = 9;
+    static final int HUNTER_BATCH_COMPLETE = 10;
+    static final int HUNTER_BATCH_CANCEL = 11;
+    static final int HUNTER_NOTIFY = 12;
+
+    static final int NETWORK_STATE_CHANGE = 13;
+    static final int AIRPLANE_MODE_CHANGE = 14;
 
     private static final int BATCH_DELAY = 200; // ms
     private static final int RETRY_DELAY = 500;
@@ -79,7 +84,8 @@ class Dispatcher {
     private final Map<String, Task> failedTaskMap;
     private final Downloader downloader;
     private final Set<Object> pausedTags;
-    private final List<TaskHunter> batch;
+    private final List<TaskHunter> batchComplete;
+    private final List<Task> batchCancel;
 
     private final NetworkBroadcastReceiver receiver;
     private final boolean scansNetworkChanges;
@@ -105,7 +111,8 @@ class Dispatcher {
         this.pausedTaskMap = new HashMap<>();
         this.failedTaskMap = new HashMap<>();
         this.pausedTags = new HashSet<>();
-        this.batch = new ArrayList<>(4);
+        this.batchComplete = new ArrayList<>(4);
+        this.batchCancel = new ArrayList<>(4);
 
         this.airplaneMode = Utils.isAirplaneModeOn(this.context);
         this.scansNetworkChanges = hasPermission(context, ACCESS_NETWORK_STATE);
@@ -139,7 +146,7 @@ class Dispatcher {
     Stats getStats() {
         Stats stats = new Stats();
         stats.hunterMapSize = hunterMap.size();
-        stats.batchSize = batch.size();
+        stats.batchSize = batchComplete.size();
         stats.failedTaskSize = failedTaskMap.size();
         stats.pausedTagSize = pausedTags.size();
         stats.pausedTaskSize = pausedTaskMap.size();
@@ -163,17 +170,21 @@ class Dispatcher {
         return service.submit(runnable);
     }
 
+
+    private void dispatchInformer(Informer informer) {
+        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(HUNTER_NOTIFY, informer));
+    }
+
     private void dispatchError(ErrorInformer errorInformer) {
-        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(HUNTER_ERROR, errorInformer));
+        dispatchInformer(errorInformer);
     }
 
     private void dispatchEvent(EventInformer eventInformer) {
-        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(TASK_EVENT, eventInformer));
+        dispatchInformer(eventInformer);
     }
 
     void dispatchProgress(ProgressInformer progressInformer) {
-        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(HUNTER_PROGRESS,
-                ProgressInformer.from(progressInformer)));
+        dispatchInformer(ProgressInformer.create(progressInformer));
     }
 
     void dispatchSubmit(Task task) {
@@ -235,7 +246,7 @@ class Dispatcher {
             hunter.setFuture(future);
             hunterMap.put(hunter.getKey(), hunter);
             log("put hunter to hunter map. size=" + hunterMap.size());
-            dispatchEvent(EventInformer.fromTask(task, EVENT_START));
+            dispatchEvent(EventInformer.create(task, EVENT_START));
             return;
         }
 
@@ -245,7 +256,7 @@ class Dispatcher {
         hunter.setFuture(future);
         hunterMap.put(hunter.getKey(), hunter);
         log("put hunter to hunter map. size=" + hunterMap.size());
-        dispatchEvent(EventInformer.fromTask(task, EVENT_START));
+        dispatchEvent(EventInformer.create(task, EVENT_START));
 
     }
 
@@ -271,7 +282,7 @@ class Dispatcher {
                     iterator.remove();
                     log("put task to paused task map");
                     pausedTaskMap.put(single.getKey(), single);
-                    dispatchEvent(EventInformer.fromTask(single, EVENT_PAUSE));
+                    dispatchEvent(EventInformer.create(single, EVENT_PAUSE));
                 }
             }
         }
@@ -313,7 +324,8 @@ class Dispatcher {
             log("find hunter");
             if (hunter.cancel()) {
                 log("cancel hunter");
-                dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
+                dispatchEvent(EventInformer.create(task, EVENT_CANCEL));
+                batchCancel(task);
                 hunterMap.remove(key);
             }
         }
@@ -322,26 +334,32 @@ class Dispatcher {
             log("paused tags contain task");
             pausedTaskMap.remove(key);
             pausedTags.remove(task.getTag());
-            dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
+            dispatchEvent(EventInformer.create(task, EVENT_CANCEL));
+            batchCancel(task);
         }
 
         Task remove = failedTaskMap.remove(key);
         if (remove != null) {
-            log("task removed from failed task map");
-            dispatchEvent(EventInformer.fromTask(task, EVENT_CANCEL));
+            log("task removed create failed task map");
+            batchCancel(task);
+            dispatchEvent(EventInformer.create(task, EVENT_CANCEL));
         }
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
     private void performComplete(TaskHunter hunter) {
         hunterMap.remove(hunter.getKey());
-        batch(hunter);
+        batchComplete(hunter);
     }
 
-    private void performBatchComplete() {
-        List<TaskHunter> copy = new ArrayList<>(batch);
-        batch.clear();
+    private void performBatchCompleteAndBatchCancel() {
+        List<TaskHunter> copy = new ArrayList<>(batchComplete);
+        batchComplete.clear();
         mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(HUNTER_BATCH_COMPLETE, copy));
+
+        List<Task> batchCancelCopy = new ArrayList<>(batchCancel);
+        batchCancel.clear();
+        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(HUNTER_BATCH_CANCEL, batchCancelCopy));
     }
 
 
@@ -386,11 +404,11 @@ class Dispatcher {
 
     private void performError(TaskHunter hunter) {
         hunterMap.remove(hunter.getKey());
-        dispatchError(ErrorInformer.fromTask(hunter.getTask().getCallback(),
+        dispatchError(ErrorInformer.create(hunter.getTask().getCallback(),
                 new SaultException(hunter.getKey(),
                         hunter.getTask().getUri().toString(),
                         hunter.getException())));
-        batch(hunter);
+        batchCancel(hunter.getTask());
     }
 
 
@@ -409,11 +427,18 @@ class Dispatcher {
     }
 
 
-    private void batch(TaskHunter hunter) {
+    private void batchComplete(TaskHunter hunter) {
         if (hunter.isCancelled()) {
             return;
         }
-        batch.add(hunter);
+        batchComplete.add(hunter);
+        if (!handler.hasMessages(HUNTER_DELAY_NEXT_BATCH)) {
+            handler.sendEmptyMessageDelayed(HUNTER_DELAY_NEXT_BATCH, BATCH_DELAY);
+        }
+    }
+
+    private void batchCancel(Task task) {
+        batchCancel.add(task);
         if (!handler.hasMessages(HUNTER_DELAY_NEXT_BATCH)) {
             handler.sendEmptyMessageDelayed(HUNTER_DELAY_NEXT_BATCH, BATCH_DELAY);
         }
@@ -466,7 +491,7 @@ class Dispatcher {
                     break;
                 }
                 case HUNTER_DELAY_NEXT_BATCH: {
-                    dispatcher.performBatchComplete();
+                    dispatcher.performBatchCompleteAndBatchCancel();
                     break;
                 }
 

@@ -24,7 +24,7 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
                            Task task,
                            Downloader downloader) {
         super(sault, dispatcher, task, downloader);
-        progressInformer = new ProgressInformer(task.getTag(), task.getCallback());
+        progressInformer =  ProgressInformer.create(task);
 
         if (isNeedResume()) {
             startPosition = task.finishedSize;

@@ -15,15 +15,11 @@ import java.util.concurrent.ExecutorService;
 
 import okhttp3.OkHttpClient;
 
-import static com.bestxty.sault.Callback.EVENT_CANCEL;
+import static com.bestxty.sault.Dispatcher.HUNTER_BATCH_CANCEL;
 import static com.bestxty.sault.Dispatcher.HUNTER_BATCH_COMPLETE;
-import static com.bestxty.sault.Dispatcher.HUNTER_ERROR;
-import static com.bestxty.sault.Dispatcher.HUNTER_PROGRESS;
+import static com.bestxty.sault.Dispatcher.HUNTER_NOTIFY;
 import static com.bestxty.sault.Dispatcher.TASK_BATCH_RESUME;
-import static com.bestxty.sault.Dispatcher.TASK_EVENT;
-import static com.bestxty.sault.Utils.ErrorInformer;
-import static com.bestxty.sault.Utils.EventInformer;
-import static com.bestxty.sault.Utils.ProgressInformer;
+import static com.bestxty.sault.Utils.*;
 import static com.bestxty.sault.Utils.log;
 
 /**
@@ -43,6 +39,7 @@ public final class Sault {
                         Task task = batch.get(i);
                         task.getSault().resumeTask(task);
                     }
+                    batch.clear();
                     break;
                 }
                 case HUNTER_BATCH_COMPLETE: {
@@ -51,25 +48,21 @@ public final class Sault {
                         TaskHunter hunter = batch.get(i);
                         hunter.getSault().complete(hunter);
                     }
+                    batch.clear();
                     break;
                 }
-                case HUNTER_PROGRESS: {
-                    ProgressInformer informer = (ProgressInformer) msg.obj;
-                    informer.notifyProgress();
-                    break;
-                }
-                case TASK_EVENT: {
-                    EventInformer informer = (EventInformer) msg.obj;
-                    if (informer.event == EVENT_CANCEL) {
-                        Task task = informer.task;
+                case HUNTER_BATCH_CANCEL: {
+                    @SuppressWarnings("unchecked") List<Task> batch = (List<Task>) msg.obj;
+                    for (int i = 0, n = batch.size(); i < n; i++) {
+                        Task task = batch.get(i);
                         task.getSault().cancelTask(task);
                     }
-                    informer.notifyEvent();
+                    batch.clear();
                     break;
                 }
-                case HUNTER_ERROR: {
-                    ErrorInformer informer = (ErrorInformer) msg.obj;
-                    informer.notifyError();
+                case HUNTER_NOTIFY: {
+                    Informer informer = (Informer) msg.obj;
+                    informer.callNotify();
                     break;
                 }
             }
@@ -190,7 +183,7 @@ public final class Sault {
     }
 
     public TaskBuilder load(String url) {
-        log("load task from url:" + url);
+        log("load task create url:" + url);
         return new TaskBuilder(this, Uri.parse(url));
     }
 

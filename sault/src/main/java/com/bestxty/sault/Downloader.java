@@ -14,7 +14,7 @@ import java.io.InputStream;
 public interface Downloader {
 
     /**
-     * load resource from uri.
+     * load resource create uri.
      *
      * @param uri uri
      * @return response {@link Response}

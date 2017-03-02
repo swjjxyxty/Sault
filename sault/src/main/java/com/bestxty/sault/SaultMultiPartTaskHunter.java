@@ -29,7 +29,7 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
     SaultMultiPartTaskHunter(Sault sault, Dispatcher dispatcher, Task task, Downloader downloader) {
         super(sault, dispatcher, task, downloader);
         taskHunterList = new ArrayList<>();
-        progressInformer = new ProgressInformer(task.getTag(), task.getCallback());
+        progressInformer = ProgressInformer.create(task);
     }
 
 

@@ -85,7 +85,12 @@ final class Utils {
         return context.checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
     }
 
-    static class ErrorInformer {
+
+    interface Informer {
+        void callNotify();
+    }
+
+    static class ErrorInformer implements Informer {
         private Callback callback;
         private SaultException exception;
 
@@ -94,26 +99,28 @@ final class Utils {
             this.callback = callback;
         }
 
-        static ErrorInformer fromTask(Callback callback, SaultException exception) {
+        static ErrorInformer create(Callback callback, SaultException exception) {
             return new ErrorInformer(exception, callback);
         }
 
-        void notifyError() {
+        @Override
+        public void callNotify() {
             if (callback != null) {
                 callback.onError(exception);
             }
         }
+
     }
 
 
-    static class ProgressInformer {
+    static class ProgressInformer implements Informer {
         Object tag;
         long totalSize;
         long finishedSize;
         private Callback callback;
 
-        ProgressInformer(Object tag,
-                         Callback callback) {
+        private ProgressInformer(Object tag,
+                                 Callback callback) {
             this.tag = tag;
             this.callback = callback;
         }
@@ -126,39 +133,48 @@ final class Utils {
             this.callback = informer.callback;
         }
 
-        static ProgressInformer from(ProgressInformer informer) {
+        static ProgressInformer create(ProgressInformer informer) {
             return new ProgressInformer(informer);
         }
 
 
-        void notifyProgress() {
+        static ProgressInformer create(Task task) {
+            return new ProgressInformer(task.getTag(), task.getCallback());
+        }
+
+
+        @Override
+        public void callNotify() {
             if (callback != null) {
                 callback.onProgress(tag, totalSize, finishedSize);
             }
         }
+
     }
 
 
-    static class EventInformer {
+    static class EventInformer implements Informer {
         int event;
         Task task;
         private Callback callback;
 
-        EventInformer(Task task, int event, Callback callback) {
+        private EventInformer(Task task, int event, Callback callback) {
             this.task = task;
             this.event = event;
             this.callback = callback;
         }
 
-        static EventInformer fromTask(Task task, int event) {
+        static EventInformer create(Task task, int event) {
             return new EventInformer(task, event, task.getCallback());
         }
 
-        void notifyEvent() {
+        @Override
+        public void callNotify() {
             if (callback != null) {
                 callback.onEvent(task.getTag(), event);
             }
         }
+
     }
 
     static class DownloadThreadFactory implements ThreadFactory {

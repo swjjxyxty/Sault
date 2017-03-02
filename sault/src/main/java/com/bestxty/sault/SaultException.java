@@ -20,16 +20,12 @@ public class SaultException extends RuntimeException implements Parcelable {
     }
 
     public SaultException(String key, String url, String reason) {
-        this.key = key;
-        this.url = url;
-        this.reason = reason;
+        this(key, url, reason, null);
     }
 
 
     public SaultException(String key, String url, Throwable throwable) {
-        super(throwable);
-        this.key = key;
-        this.url = url;
+        this(key, url, "", throwable);
     }
 
 
@@ -38,6 +34,10 @@ public class SaultException extends RuntimeException implements Parcelable {
         this.key = key;
         this.url = url;
         this.reason = reason;
+
+        if (reason == null || "".equals(reason)) {
+            this.reason = throwable.getMessage();
+        }
     }
 
     public String getReason() {
