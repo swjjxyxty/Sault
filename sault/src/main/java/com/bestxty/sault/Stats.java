@@ -21,6 +21,7 @@ class Stats {
     int maximumPoolSize;
     int poolSize;
 
+    @SuppressWarnings("StringBufferReplaceableByString")
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

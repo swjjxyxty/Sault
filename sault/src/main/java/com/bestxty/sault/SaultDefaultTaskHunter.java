@@ -1,8 +1,10 @@
 package com.bestxty.sault;
 
-import android.util.Log;
-
 import com.bestxty.sault.Utils.ProgressInformer;
+
+import java.util.Locale;
+
+import static com.bestxty.sault.Utils.log;
 
 /**
  * @author xty
@@ -87,7 +89,12 @@ class SaultDefaultTaskHunter extends AbstractSaultTaskHunter {
     @Override
     void onFinish() {
         if (listener != null) {
-            Log.d("Sault", "task:" + task);
+            if (getSault().isLoggingEnabled()) {
+                log(String.format(Locale.US,
+                        "Task finished. Task:{id=%d,finishedSize=%d,totalSize=%d,startPosition=%d,endPosition=%d}",
+                        task.id, task.finishedSize, task.totalSize,
+                        task.getStartPosition(), task.getEndPosition()));
+            }
             listener.onFinish(this);
             return;
         }

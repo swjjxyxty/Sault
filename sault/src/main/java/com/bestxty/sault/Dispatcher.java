@@ -10,7 +10,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 
 import com.bestxty.sault.Utils.Informer;
 
@@ -20,7 +19,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -40,7 +38,6 @@ import static com.bestxty.sault.Utils.EventInformer;
 import static com.bestxty.sault.Utils.ProgressInformer;
 import static com.bestxty.sault.Utils.getService;
 import static com.bestxty.sault.Utils.hasPermission;
-import static com.bestxty.sault.Utils.log;
 
 /**
  * @author xty
@@ -189,15 +186,10 @@ class Dispatcher {
     }
 
     void dispatchPauseTag(Object tag) {
-        log(String.format(Locale.CHINA, "dispatch pause. paused size=%d,paused tag=%d,hunter size=%d.",
-                pausedTaskMap.size(),
-                pausedTags.size(),
-                hunterMap.size()));
         handler.sendMessage(handler.obtainMessage(TASK_PAUSE, tag));
     }
 
     void dispatchCancel(Task task) {
-        log("dispatch cancel.");
         handler.sendMessage(handler.obtainMessage(TASK_CANCEL, task));
     }
 
@@ -211,13 +203,11 @@ class Dispatcher {
 
     @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     void dispatchFailed(TaskHunter hunter) {
-        log("dispatch task failed. ex=" + hunter.getException().getMessage());
         handler.sendMessage(handler.obtainMessage(HUNTER_FAILED, hunter));
     }
 
     @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     void dispatchRetry(TaskHunter hunter) {
-        log("dispatch task retry.ex=" + hunter.getException().getMessage());
         handler.sendMessageDelayed(handler.obtainMessage(HUNTER_RETRY, hunter), RETRY_DELAY);
     }
 
@@ -232,14 +222,12 @@ class Dispatcher {
 
 
     private void performSubmit(Task task) {
-        log("perform submit task,task=" + task.getKey());
         if (!task.isMultiThreadEnabled()) {
             TaskHunter hunter = new SaultDefaultTaskHunter(task.getSault(),
                     this, task, downloader);
             Future<?> future = service.submit(hunter);
             hunter.setFuture(future);
             hunterMap.put(hunter.getKey(), hunter);
-            log("put hunter to hunter map. size=" + hunterMap.size());
             dispatchEvent(EventInformer.create(task, EVENT_START));
             return;
         }
@@ -249,18 +237,15 @@ class Dispatcher {
         Future<?> future = service.submit(hunter);
         hunter.setFuture(future);
         hunterMap.put(hunter.getKey(), hunter);
-        log("put hunter to hunter map. size=" + hunterMap.size());
         dispatchEvent(EventInformer.create(task, EVENT_START));
 
     }
 
     private void performPause(Object tag) {
         if (!pausedTags.add(tag)) {
-            log("tag is already in paused tag set.");
             return;
         }
 
-        log("ready pause task for tag:" + tag);
         for (Iterator<TaskHunter> iterator = hunterMap.values().iterator(); iterator.hasNext(); ) {
             TaskHunter hunter = iterator.next();
             Task single = hunter.getTask();
@@ -269,26 +254,19 @@ class Dispatcher {
             }
 
             if (single.getTag().equals(tag)) {
-                log("find task");
-                log("detach task for hunter");
                 if (hunter.cancel()) {
-                    log("cancel hunter");
                     iterator.remove();
-                    log("put task to paused task map");
                     pausedTaskMap.put(single.getKey(), single);
                     dispatchEvent(EventInformer.create(single, EVENT_PAUSE));
                 }
             }
         }
-        log("perform pause finish");
     }
 
     private void performResume(Object tag) {
         if (!pausedTags.remove(tag)) {
-            log("paused tag set not contain tag.");
             return;
         }
-        log("ready resume task for tag:" + tag);
         List<Task> batch = null;
         for (Iterator<Task> iterator = pausedTaskMap.values().iterator(); iterator.hasNext(); ) {
             Task task = iterator.next();
@@ -302,22 +280,16 @@ class Dispatcher {
         }
 
         if (batch != null) {
-            log("find need resumed task size=" + batch.size());
             mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(TASK_BATCH_RESUME, batch));
-        } else {
-            log("not found need resumed task");
         }
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
     private void performCancel(Task task) {
-        log("perform cancel.");
         String key = task.getKey();
         TaskHunter hunter = hunterMap.get(key);
         if (hunter != null) {
-            log("find hunter");
             if (hunter.cancel()) {
-                log("cancel hunter");
                 dispatchEvent(EventInformer.create(task, EVENT_CANCEL));
                 batchCancel(task);
                 hunterMap.remove(key);
@@ -325,7 +297,6 @@ class Dispatcher {
         }
 
         if (pausedTags.contains(task.getTag())) {
-            log("paused tags contain task");
             pausedTaskMap.remove(key);
             pausedTags.remove(task.getTag());
             dispatchEvent(EventInformer.create(task, EVENT_CANCEL));
@@ -353,7 +324,6 @@ class Dispatcher {
 
     private void performRetry(TaskHunter hunter) {
         if (hunter.isCancelled()) {
-            log("hunter cancelled");
             return;
         }
 
@@ -368,20 +338,13 @@ class Dispatcher {
             networkInfo = connectivityManager.getActiveNetworkInfo();
         }
 
-        log("airplan mode =" + airplaneMode);
-
         boolean hasConnectivity = networkInfo != null && networkInfo.isConnected();
         boolean shouldRetryHunter = hunter.shouldRetry(airplaneMode, networkInfo);
-
-        log("should retry hunter=" + shouldRetryHunter);
 
         if (!shouldRetryHunter) {
             performError(hunter);
             return;
         }
-
-        log("has connectivity=" + hasConnectivity);
-        log("scansNetworkChanges=" + scansNetworkChanges);
 
         // If we don't scan for network changes (missing permission) or if we have connectivity, retry.
         if (!scansNetworkChanges || hasConnectivity) {
@@ -406,12 +369,10 @@ class Dispatcher {
 
 
     private void performAirplaneModeChange(boolean airplaneMode) {
-        Log.d("Sault", "performAirplaneModeChange() called with: airplaneMode = [" + airplaneMode + "]");
         this.airplaneMode = airplaneMode;
     }
 
     private void performNetworkStateChange(NetworkInfo info) {
-        Log.d("Sault", "performNetworkStateChange() called with: info = [" + info + "]");
         if (service instanceof SaultExecutorService && isAutoAdjustThreadEnabled()) {
             ((SaultExecutorService) service).adjustThreadCount(info);
         }

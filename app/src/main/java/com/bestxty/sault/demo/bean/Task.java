@@ -1,5 +1,7 @@
 package com.bestxty.sault.demo.bean;
 
+import com.bestxty.sault.Sault;
+
 /**
  * @author swjjx
  *         Created by swjjx on 2016/12/20.
@@ -17,14 +19,16 @@ public class Task {
     private String desc;
     private int state = STATE_READY;
     private Object tag;
+    private Sault.Priority priority;
 
     public Task() {
     }
 
-    public Task(String title, String desc, String url) {
+    public Task(String title, String desc, String url, Sault.Priority priority) {
         this.title = title;
         this.desc = desc;
         this.url = url;
+        this.priority = priority;
     }
 
     @Override
@@ -35,6 +39,14 @@ public class Task {
                 ", desc='" + desc + '\'' +
                 ", state=" + state +
                 '}';
+    }
+
+    public void setPriority(Sault.Priority priority) {
+        this.priority = priority;
+    }
+
+    public Sault.Priority getPriority() {
+        return priority;
     }
 
     public Object getTag() {

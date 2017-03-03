@@ -19,7 +19,7 @@ public interface Downloader {
      * @param uri           uri
      * @param startPosition resource start position
      * @return response {@link Response}
-     * @throws IOException
+     * @throws IOException exception
      */
     Response load(Uri uri, long startPosition) throws IOException;
 
@@ -30,7 +30,7 @@ public interface Downloader {
      * @param startPosition resource start position
      * @param endPosition   resource end position
      * @return response {@link Response}
-     * @throws IOException
+     * @throws IOException exception
      */
     Response load(Uri uri, long startPosition, long endPosition) throws IOException;
 
@@ -38,7 +38,7 @@ public interface Downloader {
      * detect uri resource content length
      *
      * @param uri uri
-     * @throws IOException
+     * @throws IOException exception
      */
     long fetchContentLength(Uri uri) throws IOException;
 

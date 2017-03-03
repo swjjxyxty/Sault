@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.UUID;
 
 import static com.bestxty.sault.Sault.Priority;
-import static com.bestxty.sault.Utils.log;
 
 /**
  * @author xty
@@ -74,7 +73,6 @@ public class TaskBuilder {
 
         if (target == null) {
             target = new File(sault.getSaveDir().getAbsolutePath() + File.separator + uri.getLastPathSegment());
-            log(target.getAbsolutePath());
         }
         if (priority == null) {
             priority = Priority.NORMAL;
@@ -95,11 +93,6 @@ public class TaskBuilder {
 
         Task task = new Task(sault, key, uri, target, tag, priority, callback,
                 multiThreadEnabled, breakPointEnabled);
-
-        if (sault.isLoggingEnabled()) {
-            log("build task:");
-            log(task.getKey());
-        }
 
         task.startTime = System.nanoTime();
 
@@ -138,7 +131,7 @@ public class TaskBuilder {
         builder.append("breakPointEnable:").append(breakPointEnabled);
 
         builder.append(KEY_SEPARATOR);
-        builder.append("hasCallback:").append(callback == null);
+        builder.append("hasCallback:").append(callback != null);
 
 
         return builder.toString();

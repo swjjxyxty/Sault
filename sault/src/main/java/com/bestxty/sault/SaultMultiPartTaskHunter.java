@@ -1,13 +1,11 @@
 package com.bestxty.sault;
 
-import android.net.NetworkInfo;
-import android.util.Log;
-
 import com.bestxty.sault.Utils.ProgressInformer;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Future;
 
 import static com.bestxty.sault.Utils.THREAD_IDLE_NAME;
@@ -59,7 +57,6 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
         List<Task> subTaskList = task.getSubTaskList();
         long totalSize = downloader.fetchContentLength(task.getUri());
 
-        Log.d("Sault", "totalSize:" + totalSize);
         task.totalSize = totalSize;
         progressInformer.totalSize = totalSize;
 
@@ -92,13 +89,18 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
                 calculateTaskCount();
             } else {
                 progressInformer.totalSize = task.totalSize;
-                Log.d("Sault", "progressInformer.totalSize:" + progressInformer.totalSize);
             }
 
+            boolean loggingEnable = getSault().isLoggingEnabled();
+
             for (Task subTask : task.getSubTaskList()) {
-                log(subTask.toString());
+                if (loggingEnable) {
+                    log(String.format(Locale.US,
+                            "Create task. Task={id=%d,finishedSize=%d,totalSize=%d,startPosition=%d,endPosition=%d}",
+                            subTask.id, subTask.finishedSize, subTask.totalSize,
+                            subTask.getStartPosition(), subTask.getEndPosition()));
+                }
                 if (subTask.isDone()) {
-                    log("subtask is done break. " + subTask.toString());
                     continue;
                 }
                 TaskHunter taskHunter = new SaultDefaultTaskHunter(task.getSault(), dispatcher, subTask,
@@ -109,7 +111,7 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
                 taskHunter.setFuture(future);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log(e.getMessage(), e);
             setException(e);
         } finally {
             currentThread().setName(THREAD_IDLE_NAME);
@@ -124,8 +126,4 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
         return super.cancel();
     }
 
-    @Override
-    public boolean shouldRetry(boolean airplaneMode, NetworkInfo info) {
-        return false;
-    }
 }

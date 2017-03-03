@@ -121,14 +121,5 @@ final class Task {
         return finishedSize == (endPosition - startPosition) + 1;
     }
 
-    @Override
-    public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", finishedSize=" + finishedSize +
-                ", totalSize=" + totalSize +
-                ", startPosition=" + startPosition +
-                ", endPosition=" + endPosition +
-                '}';
-    }
+
 }

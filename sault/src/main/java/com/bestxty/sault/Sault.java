@@ -19,7 +19,7 @@ import static com.bestxty.sault.Dispatcher.HUNTER_BATCH_CANCEL;
 import static com.bestxty.sault.Dispatcher.HUNTER_BATCH_COMPLETE;
 import static com.bestxty.sault.Dispatcher.HUNTER_NOTIFY;
 import static com.bestxty.sault.Dispatcher.TASK_BATCH_RESUME;
-import static com.bestxty.sault.Utils.*;
+import static com.bestxty.sault.Utils.Informer;
 import static com.bestxty.sault.Utils.log;
 
 /**
@@ -69,6 +69,10 @@ public final class Sault {
         }
     };
 
+    public static int calculateProgress(long finishedSize, long totalSize) {
+        if (totalSize == 0) throw new IllegalArgumentException("total size must great than zero!");
+        return (int) (finishedSize * 100 / totalSize);
+    }
 
     /**
      * task priority.
@@ -96,7 +100,7 @@ public final class Sault {
     private final Map<Object, Task> taskMap;
 
 
-    private boolean loggingEnabled;
+    private volatile boolean loggingEnabled;
 
     private boolean breakPointEnabled;
 
@@ -120,28 +124,89 @@ public final class Sault {
         return dump();
     }
 
+
+    /**
+     * {@code true} if debug logging is enabled.
+     */
+    @SuppressWarnings("WeakerAccess")
+    public boolean isLoggingEnabled() {
+        return loggingEnabled;
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public boolean isBreakPointEnabled() {
+        return breakPointEnabled;
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public boolean isMultiThreadEnabled() {
+        return multiThreadEnabled;
+    }
+
+
+    public TaskBuilder load(String url) {
+        return new TaskBuilder(this, Uri.parse(url));
+    }
+
+    /**
+     * pause task by tag.
+     *
+     * @param tag task's tag. {@link Task#getTag()}
+     */
+    public void pause(Object tag) {
+        dispatcher.dispatchPauseTag(tag);
+    }
+
+
+    /**
+     * resume task by tag.
+     *
+     * @param tag task's tag. {@link Task#getTag()}
+     */
+    public void resume(Object tag) {
+        dispatcher.dispatchResumeTag(tag);
+    }
+
+
+    /**
+     * cancel task by tag.
+     *
+     * @param tag task's tag. {@link Task#getTag()}
+     */
+    public void cancel(Object tag) {
+        Task task = taskMap.get(tag);
+        if (task != null) {
+            dispatcher.dispatchCancel(task);
+        } else {
+            if (isLoggingEnabled())
+                log("cancel failed. tag not exist!");
+        }
+    }
+
+    /**
+     * shutdown .
+     * release resources.
+     */
+    public void shutdown() {
+        dispatcher.shutdown();
+        HANDLER.removeCallbacksAndMessages(null);
+    }
+
+
+    void enqueueAndSubmit(Task task) {
+        Task source = taskMap.get(task.getTag());
+        if (source == null) {
+            taskMap.put(task.getTag(), task);
+        }
+        submit(task);
+    }
+
+
     private Stats dump() {
         Stats stats = dispatcher.getStats();
         stats.taskSize = taskMap.size();
         return stats;
     }
-
-
-    /**
-     * {@code true} if debug logging is enabled.
-     */
-    public boolean isLoggingEnabled() {
-        return loggingEnabled;
-    }
-
-    public boolean isBreakPointEnabled() {
-        return breakPointEnabled;
-    }
-
-    public boolean isMultiThreadEnabled() {
-        return multiThreadEnabled;
-    }
-
 
     private void cancelTask(Task task) {
         taskMap.remove(task.getTag());
@@ -156,7 +221,6 @@ public final class Sault {
     }
 
     private void complete(TaskHunter hunter) {
-        log("complete() called with: hunter = [" + hunter + "]");
         Task single = hunter.getTask();
         taskMap.remove(single.getTag());
         Callback callback = single.getCallback();
@@ -166,50 +230,14 @@ public final class Sault {
         }
     }
 
-    void enqueueAndSubmit(Task task) {
-        log("enqueue and submit task.task=" + task.getKey());
-        Task source = taskMap.get(task.getTag());
-
-        if (source == null) {
-            taskMap.put(task.getTag(), task);
-            log("put task to task map");
-        }
-        submit(task);
-    }
-
     private void submit(Task task) {
-        log("submit task. task=" + task.getKey());
+        if (isLoggingEnabled())
+            log("submit task. task=" + task.getKey());
         dispatcher.dispatchSubmit(task);
     }
 
-    public TaskBuilder load(String url) {
-        log("load task create url:" + url);
-        return new TaskBuilder(this, Uri.parse(url));
-    }
 
-    public void pause(Object tag) {
-        dispatcher.dispatchPauseTag(tag);
-    }
-
-    public void resume(Object tag) {
-        dispatcher.dispatchResumeTag(tag);
-    }
-
-    public void cancel(Object tag) {
-        Task task = taskMap.get(tag);
-        if (task != null) {
-            dispatcher.dispatchCancel(task);
-        } else {
-            log("not found need cancel task.");
-        }
-    }
-
-    public void shutdown() {
-        dispatcher.shutdown();
-        HANDLER.removeCallbacksAndMessages(null);
-    }
-
-
+    @SuppressWarnings({"WeakerAccess", "unused"})
     public static class Builder {
 
         private File saveDir;
@@ -224,14 +252,13 @@ public final class Sault {
 
 
         public Builder(Context context) {
-            log("create sault builder.");
             this.context = context;
         }
 
         public Builder saveDir(String saveDir) {
-            log("set default file save dir. saveDir=" + saveDir);
             return saveDir(new File(saveDir));
         }
+
 
         public Builder saveDir(File saveDir) {
             this.saveDir = saveDir;

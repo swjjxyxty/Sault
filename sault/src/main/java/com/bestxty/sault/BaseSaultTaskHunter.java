@@ -1,14 +1,12 @@
 package com.bestxty.sault;
 
 import android.net.NetworkInfo;
-import android.util.Log;
 
 import com.bestxty.sault.Sault.Priority;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.bestxty.sault.Utils.log;
 import static java.lang.Thread.currentThread;
 
 /**
@@ -68,8 +66,6 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
         StringBuilder builder = NAME_BUILDER.get();
         builder.ensureCapacity(Utils.THREAD_PREFIX.length() + name.length());
         builder.replace(Utils.THREAD_PREFIX.length(), builder.length(), name);
-
-        log(builder.toString());
 
         currentThread().setName(builder.toString());
     }

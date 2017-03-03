@@ -7,6 +7,7 @@ import android.os.Parcelable;
  * @author xty
  *         Created by xty on 2016/12/8.
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class SaultException extends RuntimeException implements Parcelable {
 
 

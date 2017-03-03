@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ThreadFactory;
 
-import static android.provider.Settings.System.AIRPLANE_MODE_ON;
 
 /**
  * @author xty
@@ -36,6 +35,11 @@ final class Utils {
     static void log(String msg) {
         Log.d(TAG, msg);
     }
+
+    static void log(String msg, Throwable throwable) {
+        Log.e(TAG, msg, throwable);
+    }
+
 
     static void closeQuietly(Closeable closeable) {
         try {
@@ -65,10 +69,11 @@ final class Utils {
         }
     }
 
+    @SuppressWarnings("deprecation")
     static boolean isAirplaneModeOn(Context context) {
         ContentResolver contentResolver = context.getContentResolver();
         try {
-            return Settings.System.getInt(contentResolver, AIRPLANE_MODE_ON, 0) != 0;
+            return Settings.System.getInt(contentResolver, Settings.System.AIRPLANE_MODE_ON, 0) != 0;
         } catch (NullPointerException e) {
             return false;
         }

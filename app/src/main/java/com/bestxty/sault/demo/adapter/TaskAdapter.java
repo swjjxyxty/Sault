@@ -63,7 +63,8 @@ public class TaskAdapter extends BaseAdapter {
         holder.title.setText(task.getTitle());
         holder.desc.setText(task.getDesc());
         holder.button.setText(getTaskState(task.getState()));
-        if (task.getState() == Task.STATE_READY) {
+        if (task.getState() == Task.STATE_READY
+                || task.getState() == Task.STATE_DONE) {
             holder.progressBar.setVisibility(View.GONE);
         } else {
             holder.progressBar.setVisibility(View.VISIBLE);
@@ -88,8 +89,8 @@ public class TaskAdapter extends BaseAdapter {
 
     public static class TaskViewHolder {
         TextView title;
-        TextView desc;
-       public Button button;
-       public ProgressBar progressBar;
+        public TextView desc;
+        public Button button;
+        public ProgressBar progressBar;
     }
 }

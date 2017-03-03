@@ -3,7 +3,6 @@ package com.bestxty.sault;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -30,7 +29,6 @@ class SaultExecutorService extends ThreadPoolExecutor {
 
 
     void adjustThreadCount(NetworkInfo info) {
-        Log.d("Sault", "adjustThreadCount() called with: info = [" + info + "]");
         if (info == null || !info.isConnectedOrConnecting()) {
             setThreadCount(DEFAULT_THREAD_COUNT);
             return;
