@@ -127,6 +127,8 @@ public final class Sault {
 
     /**
      * {@code true} if debug logging is enabled.
+     *
+     * @return loggingEnable
      */
     @SuppressWarnings("WeakerAccess")
     public boolean isLoggingEnabled() {
@@ -286,6 +288,9 @@ public final class Sault {
          * <p>
          * <b>WARNING:</b> Enabling this will result in excessive object allocation. This should be only
          * be used for debugging purposes. Do NOT pass {@code BuildConfig.DEBUG}.
+         *
+         * @param enabled enable logging
+         * @return builder
          */
         public Builder loggingEnabled(boolean enabled) {
             this.loggingEnabled = enabled;

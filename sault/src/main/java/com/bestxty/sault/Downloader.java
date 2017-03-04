@@ -39,6 +39,7 @@ public interface Downloader {
      *
      * @param uri uri
      * @throws IOException exception
+     * @return content length
      */
     long fetchContentLength(Uri uri) throws IOException;
 

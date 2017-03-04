@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/DownloadLibrary.iml" filepath="$PROJECT_DIR$/DownloadLibrary.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Sault.iml" filepath="$PROJECT_DIR$/Sault.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/sault/sault.iml" filepath="$PROJECT_DIR$/sault/sault.iml" />
       <module fileurl="file://$PROJECT_DIR$/sault_rpc/sault_rpc.iml" filepath="$PROJECT_DIR$/sault_rpc/sault_rpc.iml" />

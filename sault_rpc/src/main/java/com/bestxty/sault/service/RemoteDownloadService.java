@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Environment;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 
 import com.bestxty.sault.Sault;
 
@@ -41,7 +40,6 @@ public class RemoteDownloadService extends Service implements ServiceBridge {
     }
 
 
-    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
