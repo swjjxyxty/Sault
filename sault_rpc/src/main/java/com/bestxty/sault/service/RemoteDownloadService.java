@@ -22,7 +22,7 @@ public class RemoteDownloadService extends Service implements ServiceBridge {
     @Override
     public void onCreate() {
         super.onCreate();
-        sault = new Sault.Builder(this)
+        sault = new Sault.SaultConfiguration(this)
                 .saveDir(Environment
                         .getExternalStorageDirectory()
                         .getAbsolutePath() + File.separator + "dl_test")

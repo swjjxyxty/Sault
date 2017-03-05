@@ -1,7 +1,6 @@
 package com.bestxty.sault.demo;
 
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -17,11 +16,9 @@ import com.bestxty.sault.SaultException;
 import com.bestxty.sault.demo.adapter.TaskAdapter;
 import com.bestxty.sault.demo.bean.Task;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 import static com.bestxty.sault.Sault.calculateProgress;
@@ -47,13 +44,7 @@ public class MutilTaskActivity extends AppCompatActivity {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
 
-        sault = new Sault.Builder(this)
-                .saveDir(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "dl_test")
-                .client(new OkHttpClient.Builder()
-                        .addInterceptor(loggingInterceptor)
-                        .build())
-                .loggingEnabled(true)
-                .build();
+        sault = Sault.getInstance(this);
 
         initTaskList();
         adapter = new TaskAdapter(this, taskList);
@@ -117,7 +108,7 @@ public class MutilTaskActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        sault.shutdown();
+        sault.close();
         DownloadApplication.getRefWatcher(this)
                 .watch(this);
         DownloadApplication.getRefWatcher(this)

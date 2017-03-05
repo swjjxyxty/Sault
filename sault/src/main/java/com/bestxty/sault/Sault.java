@@ -11,9 +11,6 @@ import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-
-import okhttp3.OkHttpClient;
 
 import static com.bestxty.sault.Dispatcher.HUNTER_BATCH_CANCEL;
 import static com.bestxty.sault.Dispatcher.HUNTER_BATCH_COMPLETE;
@@ -27,6 +24,8 @@ import static com.bestxty.sault.Utils.log;
  *         Created by xty on 2016/12/9.
  */
 public final class Sault {
+
+    private static SaultConfiguration defaultConfiguration;
 
 
     static final Handler HANDLER = new Handler(Looper.getMainLooper()) {
@@ -74,6 +73,28 @@ public final class Sault {
         return (int) (finishedSize * 100 / totalSize);
     }
 
+    public static void setDefaultConfiguration(SaultConfiguration configuration) {
+        if (configuration == null) {
+            throw new IllegalArgumentException("A non-null SaultConfiguration must be provided");
+        }
+        defaultConfiguration = configuration;
+    }
+
+    public static Sault getInstance(SaultConfiguration configuration, Context context) {
+        if (configuration == null) {
+            throw new NullPointerException("A non-null SaultConfiguration must be provided");
+        }
+        return SaultCache.createSaultOrGetFromCache(configuration, context);
+    }
+
+
+    public static Sault getInstance(Context context) {
+        if (defaultConfiguration == null) {
+            throw new NullPointerException("No default SaultConfiguration was found. Call setDefaultConfiguration() first");
+        }
+        return SaultCache.createSaultOrGetFromCache(defaultConfiguration, context);
+    }
+
     /**
      * task priority.
      * default value is normal.
@@ -99,6 +120,7 @@ public final class Sault {
      */
     private final Map<Object, Task> taskMap;
 
+    private final String key;
 
     private volatile boolean loggingEnabled;
 
@@ -106,14 +128,19 @@ public final class Sault {
 
     private boolean multiThreadEnabled;
 
-    Sault(Dispatcher dispatcher, File saveDir, boolean loggingEnabled,
-          boolean breakPointEnabled, boolean multiThreadEnabled) {
-        this.dispatcher = dispatcher;
-        this.saveDir = saveDir;
-        this.loggingEnabled = loggingEnabled;
-        this.breakPointEnabled = breakPointEnabled;
-        this.multiThreadEnabled = multiThreadEnabled;
+    Sault(SaultConfiguration configuration, Context context) {
+        this.dispatcher = new Dispatcher(context.getApplicationContext(), configuration.getService(),
+                HANDLER, configuration.getDownloader(), configuration.isAutoAdjustThreadEnabled());
+        this.saveDir = configuration.getSaveDir();
+        this.loggingEnabled = configuration.isLoggingEnabled();
+        this.breakPointEnabled = configuration.isBreakPointEnabled();
+        this.multiThreadEnabled = configuration.isMultiThreadEnabled();
+        this.key = configuration.getKey();
         taskMap = new LinkedHashMap<>();
+    }
+
+    String getKey() {
+        return key;
     }
 
     File getSaveDir() {
@@ -185,11 +212,15 @@ public final class Sault {
         }
     }
 
+    public void close() {
+        SaultCache.release(this);
+    }
+
     /**
      * shutdown .
      * release resources.
      */
-    public void shutdown() {
+    void shutdown() {
         dispatcher.shutdown();
         HANDLER.removeCallbacksAndMessages(null);
     }
@@ -238,91 +269,4 @@ public final class Sault {
         dispatcher.dispatchSubmit(task);
     }
 
-
-    @SuppressWarnings({"WeakerAccess", "unused"})
-    public static class Builder {
-
-        private File saveDir;
-        private ExecutorService service;
-        private Downloader downloader;
-        private OkHttpClient httpClient;
-        private Context context;
-        private boolean loggingEnabled = false;
-        private boolean breakPointEnabled = true;
-        private boolean multiThreadEnabled = true;
-        private boolean autoAdjustThreadEnabled = true;
-
-
-        public Builder(Context context) {
-            this.context = context;
-        }
-
-        public Builder saveDir(String saveDir) {
-            return saveDir(new File(saveDir));
-        }
-
-
-        public Builder saveDir(File saveDir) {
-            this.saveDir = saveDir;
-            return this;
-        }
-
-        public Builder client(OkHttpClient httpClient) {
-            this.httpClient = httpClient;
-            return this;
-        }
-
-        public Builder downloader(Downloader downloader) {
-            this.downloader = downloader;
-            return this;
-        }
-
-        public Builder executor(ExecutorService service) {
-            this.service = service;
-            return this;
-        }
-
-
-        /**
-         * Toggle whether debug logging is enabled.
-         * <p>
-         * <b>WARNING:</b> Enabling this will result in excessive object allocation. This should be only
-         * be used for debugging purposes. Do NOT pass {@code BuildConfig.DEBUG}.
-         *
-         * @param enabled enable logging
-         * @return builder
-         */
-        public Builder loggingEnabled(boolean enabled) {
-            this.loggingEnabled = enabled;
-            return this;
-        }
-
-        public Builder breakPointEnabled(boolean enabled) {
-            this.breakPointEnabled = enabled;
-            return this;
-        }
-
-        public Builder multiThreadEnabled(boolean enabled) {
-            this.multiThreadEnabled = enabled;
-            return this;
-        }
-
-        public Builder autoAdjustThreadEnabled(boolean enabled) {
-            this.autoAdjustThreadEnabled = enabled;
-            return this;
-        }
-
-
-        public Sault build() {
-            if (service == null) {
-                service = new SaultExecutorService();
-            }
-            if (downloader == null) {
-                downloader = httpClient == null ? new OkHttpDownloader() : new OkHttpDownloader(httpClient);
-            }
-            Dispatcher dispatcher = new Dispatcher(context, service, HANDLER, downloader,
-                    autoAdjustThreadEnabled);
-            return new Sault(dispatcher, saveDir, loggingEnabled, breakPointEnabled, multiThreadEnabled);
-        }
-    }
 }

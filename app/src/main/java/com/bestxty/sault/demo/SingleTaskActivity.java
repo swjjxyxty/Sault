@@ -1,7 +1,6 @@
 package com.bestxty.sault.demo;
 
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -11,11 +10,6 @@ import android.widget.ProgressBar;
 import com.bestxty.sault.Callback;
 import com.bestxty.sault.Sault;
 import com.bestxty.sault.SaultException;
-
-import java.io.File;
-
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
 
 public class SingleTaskActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -49,15 +43,8 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
 
         enableStartBtn();
 
-        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
 
-        sault = new Sault.Builder(this)
-                .saveDir(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "dl_test")
-                .client(new OkHttpClient.Builder()
-                        .addInterceptor(loggingInterceptor)
-                        .build())
-                .build();
+        sault = Sault.getInstance(this);
 
     }
 
@@ -141,7 +128,7 @@ public class SingleTaskActivity extends AppCompatActivity implements View.OnClic
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        sault.shutdown();
+        sault.close();
     }
 
 
