@@ -3,12 +3,15 @@ package com.bestxty.sault;
 import com.bestxty.sault.Utils.ProgressInformer;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Future;
 
 import static com.bestxty.sault.Utils.THREAD_IDLE_NAME;
+import static com.bestxty.sault.Utils.closeQuietly;
+import static com.bestxty.sault.Utils.createTargetFile;
 import static com.bestxty.sault.Utils.log;
 import static java.lang.Thread.currentThread;
 
@@ -59,6 +62,14 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
 
         task.totalSize = totalSize;
         progressInformer.totalSize = totalSize;
+
+        createTargetFile(task.getTarget());
+
+        RandomAccessFile targetFile = new RandomAccessFile(task.getTarget(), "rw");
+
+        targetFile.setLength(totalSize);
+
+        closeQuietly(targetFile);
 
         long threadSize;
         long threadLength = LENGTH_PER_THREAD;

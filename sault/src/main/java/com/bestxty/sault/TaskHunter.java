@@ -28,6 +28,8 @@ interface TaskHunter extends Runnable {
 
     boolean isCancelled();
 
+    boolean isNeedResume();
+
     boolean shouldRetry(boolean airplaneMode, NetworkInfo info);
 
     void setFuture(Future<?> future);

@@ -52,13 +52,6 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
     }
 
 
-    boolean isNeedResume() {
-        return task.finishedSize != 0
-                && task.isBreakPointEnabled()
-                && downloader.supportBreakPoint();
-    }
-
-
     void updateThreadName() {
 
         String name = task.getName() + "-" + task.id;
@@ -70,8 +63,16 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
         currentThread().setName(builder.toString());
     }
 
+
     protected void setException(Exception exception) {
         this.exception = exception;
+    }
+
+    @Override
+    public boolean isNeedResume() {
+        return task.finishedSize != 0
+                && task.isBreakPointEnabled()
+                && downloader.supportBreakPoint();
     }
 
     @Override

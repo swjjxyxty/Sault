@@ -38,6 +38,7 @@ import static com.bestxty.sault.Utils.EventInformer;
 import static com.bestxty.sault.Utils.ProgressInformer;
 import static com.bestxty.sault.Utils.getService;
 import static com.bestxty.sault.Utils.hasPermission;
+import static com.bestxty.sault.Utils.log;
 
 /**
  * @author xty
@@ -222,17 +223,19 @@ class Dispatcher {
 
 
     private void performSubmit(Task task) {
-        if (!task.isMultiThreadEnabled()) {
-            TaskHunter hunter = new SaultDefaultTaskHunter(task.getSault(),
-                    this, task, downloader);
-            Future<?> future = service.submit(hunter);
-            hunter.setFuture(future);
-            hunterMap.put(hunter.getKey(), hunter);
-            dispatchEvent(EventInformer.create(task, EVENT_START));
-            return;
-        }
 
-        TaskHunter hunter = new SaultMultiPartTaskHunter(task.getSault(), this, task, downloader);
+        TaskHunter hunter = task.isMultiThreadEnabled()
+                ? new SaultMultiPartTaskHunter(task.getSault(), this, task, downloader)
+                : new SaultDefaultTaskHunter(task.getSault(), this, task, downloader);
+
+        if (!hunter.isNeedResume()) {
+            if (task.getTarget().exists()) {
+                boolean clearTargetFileResult = task.getTarget().delete();
+                if (hunter.getSault().isLoggingEnabled()) {
+                    log("file target exists , clear target file result=" + clearTargetFileResult);
+                }
+            }
+        }
 
         Future<?> future = service.submit(hunter);
         hunter.setFuture(future);

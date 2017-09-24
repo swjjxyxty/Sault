@@ -25,7 +25,7 @@ import static com.bestxty.sault.Utils.log;
  */
 public final class Sault {
 
-    private static SaultConfiguration defaultConfiguration;
+    private static SaultConfiguration DEFAULT_CONFIGURATION;
 
 
     static final Handler HANDLER = new Handler(Looper.getMainLooper()) {
@@ -77,7 +77,7 @@ public final class Sault {
         if (configuration == null) {
             throw new IllegalArgumentException("A non-null SaultConfiguration must be provided");
         }
-        defaultConfiguration = configuration;
+        DEFAULT_CONFIGURATION = configuration;
     }
 
     public static Sault getInstance(SaultConfiguration configuration, Context context) {
@@ -89,10 +89,10 @@ public final class Sault {
 
 
     public static Sault getInstance(Context context) {
-        if (defaultConfiguration == null) {
+        if (DEFAULT_CONFIGURATION == null) {
             throw new NullPointerException("No default SaultConfiguration was found. Call setDefaultConfiguration() first");
         }
-        return SaultCache.createSaultOrGetFromCache(defaultConfiguration, context);
+        return SaultCache.createSaultOrGetFromCache(DEFAULT_CONFIGURATION, context);
     }
 
     /**
