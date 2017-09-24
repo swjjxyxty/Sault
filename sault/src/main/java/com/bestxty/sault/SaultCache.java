@@ -43,6 +43,10 @@ final class SaultCache {
         cachesMap.remove(key);
     }
 
+    private int cacheSize() {
+        return cachesMap.size();
+    }
+
     static synchronized Sault createSaultOrGetFromCache(SaultConfiguration configuration, Context context) {
         SaultCache cache = Cache.INSTANCE.getSaultCache();
         Sault sault = cache.getFromCache(configuration.getKey());
@@ -53,6 +57,10 @@ final class SaultCache {
         return sault;
     }
 
+    static synchronized int size() {
+        SaultCache cache = Cache.INSTANCE.getSaultCache();
+        return cache.cacheSize();
+    }
 
     static synchronized void release(Sault sault) {
         SaultCache cache = Cache.INSTANCE.getSaultCache();

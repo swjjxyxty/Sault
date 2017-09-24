@@ -90,7 +90,7 @@ public final class Sault {
 
     public static Sault getInstance(Context context) {
         if (DEFAULT_CONFIGURATION == null) {
-            throw new NullPointerException("No default SaultConfiguration was found. Call setDefaultConfiguration() first");
+            throw new NullPointerException("No default SaultConfiguration was found. Call setDefaultConfiguration() first.");
         }
         return SaultCache.createSaultOrGetFromCache(DEFAULT_CONFIGURATION, context);
     }
@@ -269,4 +269,19 @@ public final class Sault {
         dispatcher.dispatchSubmit(task);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Sault sault = (Sault) o;
+
+        return key != null ? key.equals(sault.key) : sault.key == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return key != null ? key.hashCode() : 0;
+    }
 }

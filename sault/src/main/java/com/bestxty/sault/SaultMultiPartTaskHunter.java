@@ -86,10 +86,14 @@ class SaultMultiPartTaskHunter extends BaseSaultTaskHunter implements HunterStat
             if (i == threadSize - 1) {
                 end = start + threadLength + remainder - 1;
             }
-            subTaskList.add(new Task(task.getSault(), task.getKey(), task.getUri(),
-                    task.getTarget(), task.getTag(), task.getPriority(), task.getCallback(),
-                    task.isMultiThreadEnabled(), task.isBreakPointEnabled(), start, end));
+            subTaskList.add(createSubTask(start, end));
         }
+    }
+
+    private Task createSubTask(long start, long end) {
+        return new Task(task.getSault(), task.getKey(), task.getUri(),
+                task.getTarget(), task.getTag(), task.getPriority(), task.getCallback(),
+                task.isMultiThreadEnabled(), task.isBreakPointEnabled(), start, end);
     }
 
     @Override
