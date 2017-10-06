@@ -25,6 +25,7 @@ public class SimpleEventDispatcher implements EventDispatcher {
         this.eventCallbackExecutor = eventCallbackExecutor;
     }
 
+
     private List<EventCallback<?>> getEventCallbackContainer(EventCallback<?> callback) {
         Class<?> eventType = ClassUtils.getEventType(callback);
         if (eventType == null) return unresolvedEventCallbacks;
@@ -46,6 +47,10 @@ public class SimpleEventDispatcher implements EventDispatcher {
         return Collections.unmodifiableList(new CopyOnWriteArrayList<>(callbacks));
     }
 
+    @Override
+    public EventCallbackExecutor getEventCallbackExecutor() {
+        return eventCallbackExecutor;
+    }
 
     @Override
     public void addEventCallback(EventCallback<?> callback) {
@@ -81,13 +86,6 @@ public class SimpleEventDispatcher implements EventDispatcher {
     @Override
     public int callbackSize() {
         return callbackCounter.get();
-    }
-
-    @Override
-    public void stop() {
-        if (eventCallbackExecutor != null) {
-            eventCallbackExecutor.shutdown();
-        }
     }
 
     @Override

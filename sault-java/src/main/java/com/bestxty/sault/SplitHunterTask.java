@@ -1,6 +1,7 @@
 package com.bestxty.sault;
 
 import com.bestxty.sault.event.EventCallback;
+import com.bestxty.sault.event.hunter.HunterProgressEvent;
 import com.bestxty.sault.utils.Utils;
 
 import java.io.File;
@@ -12,13 +13,14 @@ import java.util.Map;
  * @author xty
  *         Created by xty on 2017/10/5.
  */
-public class SplitHunterTask implements SplitTask {
+public class SplitHunterTask extends EventSupportTask implements SplitTask {
     private final Task task;
     private final long startPosition;
     private final long endPosition;
     private final String taskId;
 
     public SplitHunterTask(Task task, long startPosition, long endPosition) {
+        super(task.getEventCallbackExecutor());
         this.task = task;
         this.startPosition = startPosition;
         this.endPosition = endPosition;

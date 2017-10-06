@@ -1,6 +1,8 @@
 package com.bestxty.sault;
 
+import com.bestxty.sault.event.DefaultEventCallbackExecutor;
 import com.bestxty.sault.event.EventCallback;
+import com.bestxty.sault.event.EventCallbackExecutor;
 import com.bestxty.sault.utils.Utils;
 
 import java.io.File;
@@ -16,7 +18,7 @@ import java.util.Map;
  * @author xty
  *         Created by xty on 2017/10/4.
  */
-public class HunterTask implements Task {
+public class HunterTask extends EventSupportTask {
 
     private String taskId;
     private final URI uri;
@@ -27,9 +29,11 @@ public class HunterTask implements Task {
     private final TraceMeta traceMeta;
     private final AdvancedProperty advancedProperty;
 
-    private HunterTask(URI uri, Map<String, String> headerMap,
-                       File target, Priority priority, List<EventCallback<?>> callbacks,
-                       TraceMeta traceMeta, AdvancedProperty advancedProperty) {
+
+    public HunterTask(EventCallbackExecutor callbackExecutor, URI uri, Map<String, String> headerMap,
+                      File target, Priority priority, List<EventCallback<?>> callbacks,
+                      TraceMeta traceMeta, AdvancedProperty advancedProperty) {
+        super(callbackExecutor);
         this.uri = uri;
         this.headerMap = headerMap;
         this.target = target;
@@ -174,7 +178,7 @@ public class HunterTask implements Task {
             advancedProperty.setMultiThreadEnabled(multiThreadEnabled);
             advancedProperty.setRetryEnabled(retryEnabled);
 
-            HunterTask task = new HunterTask(uri,
+            HunterTask task = new HunterTask(new DefaultEventCallbackExecutor(""), uri,
                     Collections.unmodifiableMap(headerMap), target,
                     priority, Collections.unmodifiableList(callbacks),
                     new TraceMeta(), advancedProperty);

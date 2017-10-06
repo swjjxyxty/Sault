@@ -6,7 +6,7 @@ import com.bestxty.sault.downloader.ContentLengthException;
 import com.bestxty.sault.downloader.Downloader;
 import com.bestxty.sault.downloader.Response;
 import com.bestxty.sault.downloader.ResponseException;
-import com.bestxty.sault.event.EventDispatcher;
+import com.bestxty.sault.event.EventCallbackExecutor;
 import com.bestxty.sault.event.hunter.HunterCompleteEvent;
 import com.bestxty.sault.event.hunter.HunterStartEvent;
 import com.bestxty.sault.utils.Utils;
@@ -29,8 +29,6 @@ import static java.lang.Thread.currentThread;
  */
 public class SimpleHunter extends ProgressSupportedHunter {
 
-    private Downloader downloader;
-    private Task task;
 
     private static final ThreadLocal<StringBuilder> NAME_BUILDER = new ThreadLocal<StringBuilder>() {
         @Override
@@ -39,10 +37,8 @@ public class SimpleHunter extends ProgressSupportedHunter {
         }
     };
 
-    public SimpleHunter(Downloader downloader, EventDispatcher eventDispatcher, Task task) {
-        super(eventDispatcher);
-        this.downloader = downloader;
-        this.task = task;
+    public SimpleHunter(Downloader downloader, EventCallbackExecutor eventCallbackExecutor, Task task) {
+        super(downloader, task, eventCallbackExecutor);
     }
 
     @Override
@@ -74,7 +70,7 @@ public class SimpleHunter extends ProgressSupportedHunter {
 
             RandomAccessFile output = new RandomAccessFile(task.getTarget(), "rw");
 
-            copySteamAndAutoClose(stream, output, startPosition, response.getContentLength());
+            copySteamAndAutoClose(stream, output, startPosition);
 
             dispatcherEvent(new HunterCompleteEvent(this));
 

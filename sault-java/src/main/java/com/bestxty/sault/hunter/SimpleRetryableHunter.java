@@ -1,6 +1,7 @@
 package com.bestxty.sault.hunter;
 
 import com.bestxty.sault.RetryableHunter;
+import com.bestxty.sault.downloader.Downloader;
 
 /**
  * @author xty
@@ -8,8 +9,14 @@ import com.bestxty.sault.RetryableHunter;
  */
 public abstract class SimpleRetryableHunter extends SimpleCancelableHunter implements RetryableHunter {
 
+    protected Downloader downloader;
+
+    public SimpleRetryableHunter(Downloader downloader) {
+        this.downloader = downloader;
+    }
+
     @Override
     public int getRetryCount() {
-        return 0;
+        return downloader.getRetryCount();
     }
 }

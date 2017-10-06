@@ -1,6 +1,8 @@
 package com.bestxty.sault.hunter;
 
-import com.bestxty.sault.event.EventDispatcher;
+import com.bestxty.sault.Task;
+import com.bestxty.sault.downloader.Downloader;
+import com.bestxty.sault.event.EventCallbackExecutor;
 import com.bestxty.sault.event.hunter.HunterProgressEvent;
 
 import java.io.IOException;
@@ -18,23 +20,19 @@ import static com.bestxty.sault.utils.Utils.calculateProgress;
  */
 public abstract class ProgressSupportedHunter extends EventSupportedHunter {
 
-
-    public ProgressSupportedHunter(EventDispatcher eventDispatcher) {
-        super(eventDispatcher);
+    public ProgressSupportedHunter(Downloader downloader, Task task, EventCallbackExecutor eventCallbackExecutor) {
+        super(downloader, task, eventCallbackExecutor);
     }
 
-
     protected void copySteamAndAutoClose(InputStream stream, RandomAccessFile output,
-                                         long startPosition, long totalSize) throws IOException {
+                                         long startPosition) throws IOException {
         try {
             byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
             int length;
-            long finishLength = 0;
             output.seek(startPosition);
             while (EOF != (length = stream.read(buffer))) {
                 output.write(buffer, 0, length);
-                finishLength += length;
-                dispatcherEvent(new HunterProgressEvent(this, calculateProgress(finishLength, totalSize)));
+                dispatcherEvent(new HunterProgressEvent(this, length));
             }
         } finally {
             closeQuietly(output);

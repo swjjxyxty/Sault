@@ -1,9 +1,6 @@
 package com.bestxty.sault.event;
 
-import com.bestxty.sault.Hunter;
-import com.bestxty.sault.event.hunter.HunterCompleteEvent;
 import com.bestxty.sault.event.hunter.HunterEvent;
-import com.bestxty.sault.event.hunter.HunterStartEvent;
 
 import org.junit.After;
 import org.junit.Before;
@@ -73,34 +70,5 @@ public class DefaultEventDispatcherTest {
         assertEquals(0, defaultEventDispatcher.callbackSize());
     }
 
-
-    @Test
-    public void dispatcherEvent() throws Exception {
-        defaultEventDispatcher.addEventCallback(new EventCallback<HunterStartEvent>() {
-            @Override
-            public void onEvent(HunterStartEvent event) {
-
-            }
-        });
-        defaultEventDispatcher.addEventCallback(new EventCallback<HunterCompleteEvent>() {
-            @Override
-            public void onEvent(HunterCompleteEvent event) {
-                System.out.println("event = " + event);
-            }
-        });
-        defaultEventDispatcher.addEventCallback(new EventCallback<HunterCompleteEvent>() {
-            @Override
-            public void onEvent(HunterCompleteEvent event) {
-                System.out.println("event = " + event);
-            }
-        });
-
-        defaultEventDispatcher.dispatcherEvent(new HunterCompleteEvent(new Hunter() {
-            @Override
-            public void run() {
-
-            }
-        }));
-    }
 
 }

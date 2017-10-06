@@ -1,15 +1,12 @@
 package com.bestxty.sault.hunter;
 
+import com.bestxty.sault.CompositeEventTaskWrapper;
 import com.bestxty.sault.SplitHunterTask;
 import com.bestxty.sault.SplitTask;
 import com.bestxty.sault.Task;
-import com.bestxty.sault.TaskWrapper;
 import com.bestxty.sault.downloader.Downloader;
 import com.bestxty.sault.downloader.HeaderResponse;
-import com.bestxty.sault.event.Event;
-import com.bestxty.sault.event.EventCallback;
-import com.bestxty.sault.event.EventDispatcher;
-import com.bestxty.sault.event.hunter.HunterProgressEvent;
+import com.bestxty.sault.event.EventCallbackExecutor;
 import com.bestxty.sault.event.task.TaskSplitEvent;
 
 import java.io.IOException;
@@ -27,20 +24,16 @@ import static com.bestxty.sault.utils.Utils.createTargetFile;
  * @author xty
  *         Created by xty on 2017/10/5.
  */
-public class TaskSplitHunter extends SimpleCancelableHunter {
+public class TaskSplitHunter extends EventSupportedHunter {
 
     private static final long DEFAULT_PER_THREAD_LENGTH = 1024 * 1024 * 10;//10M
 
-    private Downloader downloader;
-    private EventDispatcher eventDispatcher;
     private Task task;
 
-    public TaskSplitHunter(Downloader downloader, EventDispatcher eventDispatcher, Task task) {
-        this.downloader = downloader;
-        this.eventDispatcher = eventDispatcher;
+    public TaskSplitHunter(Downloader downloader, EventCallbackExecutor eventCallbackExecutor, Task task) {
+        super(downloader, task, eventCallbackExecutor);
         this.task = task;
     }
-
 
     @Override
     public void run() {
@@ -68,6 +61,7 @@ public class TaskSplitHunter extends SimpleCancelableHunter {
 
             long remainder = contentLength % threadCount;
             List<SplitTask> splitTasks = new ArrayList<>();
+            System.out.println("threadCount = " + threadCount);
             for (int count = 0; count < threadCount; count++) {
                 long startPosition = count * perThreadLength;
                 long endPosition = startPosition + perThreadLength - 1;
@@ -76,7 +70,7 @@ public class TaskSplitHunter extends SimpleCancelableHunter {
                 }
                 splitTasks.add(buildSplitTask(startPosition, endPosition));
             }
-            eventDispatcher.dispatcherEvent(new TaskSplitEvent(new TaskWrapper(task, splitTasks)));
+            dispatcherEvent(new TaskSplitEvent(new CompositeEventTaskWrapper(task, splitTasks, contentLength)));
         } catch (IOException e) {
             e.printStackTrace();
         }

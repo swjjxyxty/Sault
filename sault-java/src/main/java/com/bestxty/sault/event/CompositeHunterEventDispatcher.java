@@ -10,50 +10,41 @@ import com.bestxty.sault.event.task.TaskSubmitEvent;
  * @author xty
  *         Created by xty on 2017/10/5.
  */
-public abstract class TaskEventCallbackAdapter extends SimpleEventDispatcher {
+public abstract class CompositeHunterEventDispatcher extends SimpleEventDispatcher {
 
-    private TaskEventDispatcher taskEventDispatcher;
 
-    public TaskEventCallbackAdapter(EventCallbackExecutor eventCallbackExecutor) {
+    public CompositeHunterEventDispatcher(EventCallbackExecutor eventCallbackExecutor) {
         super(eventCallbackExecutor);
-    }
-
-
-    public void setTaskEventDispatcher(TaskEventDispatcher taskEventDispatcher) {
-        if (taskEventDispatcher == null) {
-            throw new IllegalArgumentException("");
-        }
-        this.taskEventDispatcher = taskEventDispatcher;
         registerCallbacks();
     }
 
 
     private void registerCallbacks() {
-        taskEventDispatcher.addEventCallback(new EventCallback<TaskSubmitEvent>() {
+        addEventCallback(new EventCallback<TaskSubmitEvent>() {
             @Override
             public void onEvent(TaskSubmitEvent event) {
                 performTaskSubmit(event);
             }
         });
-        taskEventDispatcher.addEventCallback(new EventCallback<TaskPauseEvent>() {
+        addEventCallback(new EventCallback<TaskPauseEvent>() {
             @Override
             public void onEvent(TaskPauseEvent event) {
                 performTaskPause(event);
             }
         });
-        taskEventDispatcher.addEventCallback(new EventCallback<TaskCancelEvent>() {
+        addEventCallback(new EventCallback<TaskCancelEvent>() {
             @Override
             public void onEvent(TaskCancelEvent event) {
                 performTaskCancel(event);
             }
         });
-        taskEventDispatcher.addEventCallback(new EventCallback<TaskResumeEvent>() {
+        addEventCallback(new EventCallback<TaskResumeEvent>() {
             @Override
             public void onEvent(TaskResumeEvent event) {
                 performTaskResume(event);
             }
         });
-        taskEventDispatcher.addEventCallback(new EventCallback<TaskCompleteEvent>() {
+        addEventCallback(new EventCallback<TaskCompleteEvent>() {
             @Override
             public void onEvent(TaskCompleteEvent event) {
                 performTaskComplete(event);
@@ -70,4 +61,5 @@ public abstract class TaskEventCallbackAdapter extends SimpleEventDispatcher {
     abstract void performTaskResume(TaskResumeEvent event);
 
     abstract void performTaskComplete(TaskCompleteEvent event);
+
 }

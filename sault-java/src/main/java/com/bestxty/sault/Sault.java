@@ -2,7 +2,6 @@ package com.bestxty.sault;
 
 import com.bestxty.sault.event.EventCallback;
 import com.bestxty.sault.event.HunterEventDispatcher;
-import com.bestxty.sault.event.TaskEventDispatcher;
 import com.bestxty.sault.event.task.TaskCancelEvent;
 import com.bestxty.sault.event.task.TaskPauseEvent;
 import com.bestxty.sault.event.task.TaskResumeEvent;
@@ -19,20 +18,13 @@ import static com.bestxty.sault.utils.Utils.log;
  * @author xty
  *         Created by xty on 2017/10/5.
  */
-public class Sault {
-
-    private TaskEventDispatcher taskEventDispatcher;
-    private HunterEventDispatcher hunterEventDispatcher;
+public class Sault extends EventSupportSault {
 
     private Map<String, Task> taskMap = new ConcurrentHashMap<>();
 
-    public Sault(TaskEventDispatcher taskEventDispatcher,
-                 HunterEventDispatcher hunterEventDispatcher) {
-        this.taskEventDispatcher = taskEventDispatcher;
-        this.hunterEventDispatcher = hunterEventDispatcher;
+    public Sault(HunterEventDispatcher hunterEventDispatcher) {
+        super(hunterEventDispatcher);
 
-        this.taskEventDispatcher.setHunterEventDispatcher(this.hunterEventDispatcher);
-        this.hunterEventDispatcher.setTaskEventDispatcher(this.taskEventDispatcher);
         hunterEventDispatcher.addEventCallback(new EventCallback<TaskSplitEvent>() {
             @Override
             public void onEvent(TaskSplitEvent event) {
@@ -44,25 +36,25 @@ public class Sault {
     public void submit(Task task) {
         log("submit task:" + task.getTaskId());
         taskMap.put(task.getTaskId(), task);
-        taskEventDispatcher.dispatcherEvent(new TaskSubmitEvent(task));
+        dispatcherEvent(new TaskSubmitEvent(task));
     }
 
     public void pause(String taskId) {
         Task task = taskMap.get(taskId);
         if (task == null) return;
-        taskEventDispatcher.dispatcherEvent(new TaskPauseEvent(task));
+        dispatcherEvent(new TaskPauseEvent(task));
     }
 
     public void cancel(String taskId) {
         Task task = taskMap.get(taskId);
         if (task == null) return;
-        taskEventDispatcher.dispatcherEvent(new TaskCancelEvent(task));
+        dispatcherEvent(new TaskCancelEvent(task));
     }
 
     public void resume(String taskId) {
         Task task = taskMap.get(taskId);
         if (task == null) return;
-        taskEventDispatcher.dispatcherEvent(new TaskResumeEvent(task));
+        dispatcherEvent(new TaskResumeEvent(task));
     }
 
 
@@ -71,7 +63,7 @@ public class Sault {
         taskMap.put(taskWrapper.getTaskId(), taskWrapper);
         List<SplitTask> splitTasks = taskWrapper.getSplitTasks();
         for (SplitTask splitTask : splitTasks) {
-            taskEventDispatcher.dispatcherEvent(new TaskSubmitEvent(splitTask));
+            dispatcherEvent(new TaskSubmitEvent(splitTask));
         }
     }
 

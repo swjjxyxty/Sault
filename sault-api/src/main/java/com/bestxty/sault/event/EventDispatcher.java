@@ -6,6 +6,7 @@ package com.bestxty.sault.event;
  */
 public interface EventDispatcher {
 
+    EventCallbackExecutor getEventCallbackExecutor();
 
     void addEventCallback(EventCallback<?> callback);
 
@@ -16,7 +17,5 @@ public interface EventDispatcher {
     int callbackSize();
 
     <E extends Event> void dispatcherEvent(E event);
-
-    void stop();
 
 }

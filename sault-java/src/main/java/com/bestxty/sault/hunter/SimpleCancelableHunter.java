@@ -10,7 +10,6 @@ import java.util.concurrent.Future;
  */
 public abstract class SimpleCancelableHunter implements CancelableHunter {
 
-
     private Future<?> future;
 
     @Override

@@ -5,9 +5,10 @@ import com.bestxty.sault.event.DefaultEventCallbackExecutor;
 import com.bestxty.sault.event.Event;
 import com.bestxty.sault.event.EventCallback;
 import com.bestxty.sault.event.HunterEventDispatcher;
-import com.bestxty.sault.event.TaskEventDispatcher;
+import com.bestxty.sault.event.task.TaskCompleteEvent;
+import com.bestxty.sault.event.task.TaskProgressEvent;
+import com.bestxty.sault.event.task.TaskStartEvent;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -29,23 +30,34 @@ public class SaultTest {
 
     @Test
     public void submit() throws Exception {
-        TaskEventDispatcher taskEventDispatcher = new TaskEventDispatcher(new DefaultEventCallbackExecutor("Task-Event-Dispatcher"));
         HunterEventDispatcher hunterEventDispatcher = new HunterEventDispatcher(new DefaultEventCallbackExecutor("Hunter-Event-Dispatcher"),
                 new SimpleSaultExecutorService(), new HttpURLConnectionDownloader());
-        Sault sault = new Sault(taskEventDispatcher, hunterEventDispatcher);
+        Sault sault = new Sault(hunterEventDispatcher);
         Task task = new HunterTask.Builder()
                 .uri("http://192.168.56.1:8000/Shadowsocks.exe")
                 .target(new File("D:\\Shadowsocks.exe"))
-                .callback(new EventCallback<Event>() {
+                .callback(new EventCallback<TaskStartEvent>() {
                     @Override
-                    public void onEvent(Event event) {
-
+                    public void onEvent(TaskStartEvent event) {
+                        System.err.println("---event = " + event);
+                    }
+                })
+                .callback(new EventCallback<TaskCompleteEvent>() {
+                    @Override
+                    public void onEvent(TaskCompleteEvent event) {
+                        System.err.println("---event = " + event);
+                    }
+                })
+                .callback(new EventCallback<TaskProgressEvent>() {
+                    @Override
+                    public void onEvent(TaskProgressEvent event) {
+                        System.err.println("event.getProgress() = " + event.getProgress());
                     }
                 })
                 .build();
         sault.submit(task);
 
-        Thread.sleep(10000);
+        Thread.sleep(5000);
 
         sault.pause(task.getTaskId());
 

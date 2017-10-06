@@ -20,7 +20,7 @@ public final class ExecuteEventCallbackTask implements Runnable {
 
     @Override
     public final void run() {
-        log("invoke callback in :" + Thread.currentThread().getName());
+//        log("invoke callback in :" + Thread.currentThread().getName());
         if (eventCallback != null && event != null) {
             invokeCallback(eventCallback, event);
         }
@@ -30,7 +30,7 @@ public final class ExecuteEventCallbackTask implements Runnable {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void invokeCallback(EventCallback callback, Event event) {
         try {
-            log("invoke callback with: callback= " + callback + ",event= " + event);
+//            log("invoke callback with: callback= " + callback + ",event= " + event);
             callback.onEvent(event);
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -11,14 +11,16 @@ import java.util.Map;
  * @author xty
  *         Created by xty on 2017/10/5.
  */
-public class TaskWrapper implements Task {
-    private Task task;
-    private List<SplitTask> splitTasks;
+public class TaskWrapper extends EventSupportTask implements Task {
+    protected Task task;
+    protected List<SplitTask> splitTasks;
 
     public TaskWrapper(Task task, List<SplitTask> splitTasks) {
+        super(task.getEventCallbackExecutor());
         this.task = task;
         this.splitTasks = splitTasks;
     }
+
 
     public List<SplitTask> getSplitTasks() {
         return splitTasks;

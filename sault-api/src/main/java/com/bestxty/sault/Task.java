@@ -1,6 +1,7 @@
 package com.bestxty.sault;
 
 import com.bestxty.sault.event.EventCallback;
+import com.bestxty.sault.event.EventDispatcher;
 
 import java.io.File;
 import java.net.URI;
@@ -11,7 +12,7 @@ import java.util.Map;
  * @author xty
  *         Created by xty on 2017/10/5.
  */
-public interface Task {
+public interface Task extends EventDispatcher {
     String getTaskId();
 
     URI getUri();

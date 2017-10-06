@@ -1,7 +1,6 @@
 package com.bestxty.sault.event.hunter;
 
 import com.bestxty.sault.Hunter;
-import com.bestxty.sault.event.hunter.HunterEvent;
 
 /**
  * @author xty
@@ -9,20 +8,14 @@ import com.bestxty.sault.event.hunter.HunterEvent;
  */
 public class HunterProgressEvent extends HunterEvent {
 
-    private int progress;
+    private long finishedSize;
 
-    /**
-     * Constructs a prototypical Event.
-     *
-     * @param hunter The object on which the Event initially occurred.
-     * @throws IllegalArgumentException if source is null.
-     */
-    public HunterProgressEvent(Hunter hunter, int progress) {
+    public HunterProgressEvent(Hunter hunter, long finishedSize) {
         super(hunter);
-        this.progress = progress;
+        this.finishedSize = finishedSize;
     }
 
-    public int getProgress() {
-        return progress;
+    public long getFinishedSize() {
+        return finishedSize;
     }
 }
