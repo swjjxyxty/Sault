@@ -14,11 +14,9 @@ interface TaskHunter extends Runnable {
 
     Sault getSault();
 
-    Task getTask();
+    SaultTask getTask();
 
     Exception getException();
-
-    String getKey();
 
     Priority getPriority();
 

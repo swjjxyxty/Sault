@@ -28,7 +28,7 @@ public final class Sault {
     private static SaultConfiguration DEFAULT_CONFIGURATION;
 
 
-    static final Handler HANDLER = new Handler(Looper.getMainLooper()) {
+    static final MainThreadHandler HANDLER = new MainThreadHandler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -108,7 +108,8 @@ public final class Sault {
     /**
      * task dispatcher.
      */
-    private final Dispatcher dispatcher;
+    private final AbstractCompositeEventDispatcher dispatcher;
+    private final TaskRequestEventDispatcher taskRequestEventDispatcher;
 
     /**
      * file save dir.
@@ -129,8 +130,8 @@ public final class Sault {
     private boolean multiThreadEnabled;
 
     Sault(SaultConfiguration configuration, Context context) {
-        this.dispatcher = new Dispatcher(context.getApplicationContext(), configuration.getService(),
-                HANDLER, configuration.getDownloader(), configuration.isAutoAdjustThreadEnabled());
+        this.dispatcher = new CompositeEventDispatcher(HANDLER);
+        this.taskRequestEventDispatcher = this.dispatcher;
         this.saveDir = configuration.getSaveDir();
         this.loggingEnabled = configuration.isLoggingEnabled();
         this.breakPointEnabled = configuration.isBreakPointEnabled();
@@ -263,10 +264,10 @@ public final class Sault {
         }
     }
 
-    private void submit(Task task) {
+    private void submit(SaultTask task) {
         if (isLoggingEnabled())
             log("submit task. task=" + task.getKey());
-        dispatcher.dispatchSubmit(task);
+        taskRequestEventDispatcher.dispatchSaultTaskSubmitRequest(task);
     }
 
     @Override

@@ -11,6 +11,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -202,4 +203,67 @@ final class Utils {
             super.run();
         }
     }
+
+    private static final AtomicInteger TASK_ID_GENERATOR = new AtomicInteger();
+    private static final AtomicInteger HUNTER_SEQUENCE_GENERATOR = new AtomicInteger();
+
+    public static int generateTaskId() {
+        return TASK_ID_GENERATOR.incrementAndGet();
+    }
+
+    public static int generateHunterSequence() {
+        return HUNTER_SEQUENCE_GENERATOR.incrementAndGet();
+    }
+
+    private static final StringBuilder MAIN_THREAD_KEY_BUILDER = new StringBuilder();
+    private static final int KEY_PADDING = 50; // Determined by exact science.
+    private static final char KEY_SEPARATOR = '\n';
+
+
+    public static String generateTaskKey(SaultTask task) {
+        String key = generateTaskKey0(MAIN_THREAD_KEY_BUILDER, task);
+        MAIN_THREAD_KEY_BUILDER.setLength(0);
+        return key;
+    }
+
+    private static String generateTaskKey0(StringBuilder builder, SaultTask task) {
+        String path = task.getUri().toString();
+        builder.ensureCapacity(path.length() + KEY_PADDING);
+        builder.append(path);
+
+        builder.append(KEY_SEPARATOR);
+        builder.append("target:").append(task.getTarget().getPath());
+
+        builder.append(KEY_SEPARATOR);
+        builder.append("tag:").append(task.getTag());
+
+        builder.append(KEY_SEPARATOR);
+        builder.append("priority:").append(task.getPriority().name());
+
+        builder.append(KEY_SEPARATOR);
+        builder.append("breakPointEnable:").append(task.isBreakPointEnabled());
+
+        builder.append(KEY_SEPARATOR);
+        builder.append("hasCallback:").append(task.getCallback() != null);
+
+
+        return builder.toString();
+    }
+
+    private static final ThreadLocal<StringBuilder> NAME_BUILDER = new ThreadLocal<StringBuilder>() {
+        @Override
+        protected StringBuilder initialValue() {
+            return new StringBuilder(Utils.THREAD_PREFIX);
+        }
+    };
+
+
+    static String getHunterThreadName(SaultTask task) {
+        String name = task.getKey() + "-" + task.getId();
+        StringBuilder builder = NAME_BUILDER.get();
+        builder.ensureCapacity(Utils.THREAD_PREFIX.length() + name.length());
+        builder.replace(Utils.THREAD_PREFIX.length(), builder.length(), name);
+        return builder.toString();
+    }
+
 }

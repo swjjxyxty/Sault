@@ -5,7 +5,6 @@ import android.net.NetworkInfo;
 import com.bestxty.sault.Sault.Priority;
 
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Thread.currentThread;
 
@@ -14,15 +13,6 @@ import static java.lang.Thread.currentThread;
  *         Created by xty on 2017/2/18.
  */
 abstract class BaseSaultTaskHunter implements TaskHunter {
-
-    private static final AtomicInteger SEQUENCE_GENERATOR = new AtomicInteger();
-
-    private static final ThreadLocal<StringBuilder> NAME_BUILDER = new ThreadLocal<StringBuilder>() {
-        @Override
-        protected StringBuilder initialValue() {
-            return new StringBuilder(Utils.THREAD_PREFIX);
-        }
-    };
 
     private final int sequence;
 
@@ -47,22 +37,27 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
         this.dispatcher = dispatcher;
         this.task = task;
         this.downloader = downloader;
-        this.sequence = SEQUENCE_GENERATOR.incrementAndGet();
+        this.sequence = Utils.generateHunterSequence();
         this.retryCount = downloader.getRetryCount();
     }
 
 
     void updateThreadName() {
-
-        String name = task.getName() + "-" + task.id;
-
-        StringBuilder builder = NAME_BUILDER.get();
-        builder.ensureCapacity(Utils.THREAD_PREFIX.length() + name.length());
-        builder.replace(Utils.THREAD_PREFIX.length(), builder.length(), name);
-
-        currentThread().setName(builder.toString());
+        currentThread().setName(Utils.getHunterThreadName(task));
     }
 
+    abstract void hunter();
+
+    @Override
+    public final void run() {
+
+        try {
+            updateThreadName();
+            hunter();
+        } finally {
+            currentThread().setName(Utils.THREAD_IDLE_NAME);
+        }
+    }
 
     protected void setException(Exception exception) {
         this.exception = exception;
@@ -70,7 +65,7 @@ abstract class BaseSaultTaskHunter implements TaskHunter {
 
     @Override
     public boolean isNeedResume() {
-        return task.finishedSize != 0
+        return task.getProgress().getFinishedSize() != 0
                 && task.isBreakPointEnabled()
                 && downloader.supportBreakPoint();
     }
