@@ -81,10 +81,10 @@ public class TaskBuilder {
             multiThreadEnabled = sault.isMultiThreadEnabled();
         }
 
-        Task task = new Task(sault, uri, target, tag, priority, callback,
-                multiThreadEnabled, breakPointEnabled);
+        SaultTask task = new DefaultSaultTask(sault, tag, uri, callback, target,
+                priority, breakPointEnabled);
 
-        sault.enqueueAndSubmit(task);
+        sault.submit(task);
 
         return task.getTag();
     }

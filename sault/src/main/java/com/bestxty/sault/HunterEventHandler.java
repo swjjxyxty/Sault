@@ -8,16 +8,13 @@ package com.bestxty.sault;
 public interface HunterEventHandler {
 
     int HUNTER_START = 200;
-    int HUNTER_CANCEL = 201;
-    int HUNTER_RETRY = 202;
-    int HUNTER_EXCEPTION = 203;
-    int HUNTER_FINISH = 204;
-    int HUNTER_FAILED = 205;
+    int HUNTER_RETRY = 204;
+    int HUNTER_EXCEPTION = 205;
+    int HUNTER_FINISH = 206;
+    int HUNTER_FAILED = 207;
 
 
     void handleHunterStart(TaskHunter hunter);
-
-    void handleHunterCancel(TaskHunter hunter);
 
     void handleHunterRetry(TaskHunter hunter);
 

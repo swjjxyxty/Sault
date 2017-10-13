@@ -74,9 +74,10 @@ public class PartingSaultTaskHunter extends AbstractTaskHunter {
             for (SaultTask partedTask : partedTasks) {
                 taskRequestEventDispatcher.dispatchSaultTaskSubmitRequest(partedTask);
             }
-
+            eventDispatcher.dispatchHunterFinish(this);
         } catch (Exception e) {
             exception = e;
+            eventDispatcher.dispatchHunterException(this);
         }
     }
 }

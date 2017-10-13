@@ -13,6 +13,7 @@ public interface SaultTaskEventHandler {
     int SAULT_TASK_CANCEL = 303;
     int SAULT_TASK_COMPLETE = 304;
     int SAULT_TASK_PROGRESS = 305;
+    int SAULT_TASK_EXCEPTION = 306;
 
     void handleSaultTaskStart(SaultTask task);
 
@@ -25,4 +26,6 @@ public interface SaultTaskEventHandler {
     void handleSaultTaskComplete(SaultTask task);
 
     void handleSaultTaskProgress(SaultTask task);
+
+    void handleSaultTaskException(SaultTask task);
 }

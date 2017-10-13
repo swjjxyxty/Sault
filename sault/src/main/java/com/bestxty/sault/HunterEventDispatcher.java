@@ -9,8 +9,6 @@ public interface HunterEventDispatcher {
 
     void dispatchHunterStart(TaskHunter hunter);
 
-    void dispatchHunterCancel(TaskHunter hunter);
-
     void dispatchHunterRetry(TaskHunter hunter);
 
     void dispatchHunterException(TaskHunter hunter);

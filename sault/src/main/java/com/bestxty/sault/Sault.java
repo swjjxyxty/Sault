@@ -3,20 +3,13 @@ package com.bestxty.sault;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 
 import java.io.File;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
-import static com.bestxty.sault.Dispatcher.HUNTER_BATCH_CANCEL;
-import static com.bestxty.sault.Dispatcher.HUNTER_BATCH_COMPLETE;
-import static com.bestxty.sault.Dispatcher.HUNTER_NOTIFY;
-import static com.bestxty.sault.Dispatcher.TASK_BATCH_RESUME;
-import static com.bestxty.sault.Utils.Informer;
 import static com.bestxty.sault.Utils.log;
 
 /**
@@ -26,47 +19,6 @@ import static com.bestxty.sault.Utils.log;
 public final class Sault {
 
     private static SaultConfiguration DEFAULT_CONFIGURATION;
-
-
-    static final MainThreadHandler HANDLER = new MainThreadHandler(Looper.getMainLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case TASK_BATCH_RESUME: {
-                    @SuppressWarnings("unchecked") List<Task> batch = (List<Task>) msg.obj;
-                    for (int i = 0, n = batch.size(); i < n; i++) {
-                        Task task = batch.get(i);
-                        task.getSault().resumeTask(task);
-                    }
-                    batch.clear();
-                    break;
-                }
-                case HUNTER_BATCH_COMPLETE: {
-                    @SuppressWarnings("unchecked") List<TaskHunter> batch = (List<TaskHunter>) msg.obj;
-                    for (int i = 0, n = batch.size(); i < n; i++) {
-                        TaskHunter hunter = batch.get(i);
-                        hunter.getSault().complete(hunter);
-                    }
-                    batch.clear();
-                    break;
-                }
-                case HUNTER_BATCH_CANCEL: {
-                    @SuppressWarnings("unchecked") List<Task> batch = (List<Task>) msg.obj;
-                    for (int i = 0, n = batch.size(); i < n; i++) {
-                        Task task = batch.get(i);
-                        task.getSault().cancelTask(task);
-                    }
-                    batch.clear();
-                    break;
-                }
-                case HUNTER_NOTIFY: {
-                    Informer informer = (Informer) msg.obj;
-                    informer.callNotify();
-                    break;
-                }
-            }
-        }
-    };
 
     public static int calculateProgress(long finishedSize, long totalSize) {
         if (totalSize == 0) throw new IllegalArgumentException("total size must great than zero!");
@@ -110,6 +62,11 @@ public final class Sault {
      */
     private final AbstractCompositeEventDispatcher dispatcher;
     private final TaskRequestEventDispatcher taskRequestEventDispatcher;
+    private final MainThreadHandler mainThreadHandler;
+    private final TaskRequestEventHandler taskRequestEventHandler;
+    private final SaultTaskEventHandler saultTaskEventHandler;
+    private final HunterEventHandler hunterEventHandler;
+    private final NetworkStatusProvider networkStatusProvider;
 
     /**
      * file save dir.
@@ -130,14 +87,28 @@ public final class Sault {
     private boolean multiThreadEnabled;
 
     Sault(SaultConfiguration configuration, Context context) {
-        this.dispatcher = new CompositeEventDispatcher(HANDLER);
-        this.taskRequestEventDispatcher = this.dispatcher;
         this.saveDir = configuration.getSaveDir();
         this.loggingEnabled = configuration.isLoggingEnabled();
         this.breakPointEnabled = configuration.isBreakPointEnabled();
         this.multiThreadEnabled = configuration.isMultiThreadEnabled();
         this.key = configuration.getKey();
         taskMap = new LinkedHashMap<>();
+
+
+        this.mainThreadHandler = new MainThreadHandler(Looper.getMainLooper());
+        this.saultTaskEventHandler = this.mainThreadHandler;
+        this.dispatcher = new CompositeEventDispatcher(mainThreadHandler, null);
+        this.taskRequestEventDispatcher = this.dispatcher;
+
+        this.networkStatusProvider = new DefaultNetworkStatusProvider(context);
+
+        ExecutorService executorService = configuration.getService();
+        Downloader downloader = configuration.getDownloader();
+        this.taskRequestEventHandler
+                = new DefaultEventHandler(executorService, downloader,
+                this.dispatcher, this.networkStatusProvider);
+        this.hunterEventHandler = ((DefaultEventHandler) this.taskRequestEventHandler);
+
     }
 
     String getKey() {
@@ -184,7 +155,7 @@ public final class Sault {
      * @param tag task's tag. {@link Task#getTag()}
      */
     public void pause(Object tag) {
-        dispatcher.dispatchPauseTag(tag);
+//        dispatcher.dispatchPauseTag(tag);
     }
 
 
@@ -194,7 +165,7 @@ public final class Sault {
      * @param tag task's tag. {@link Task#getTag()}
      */
     public void resume(Object tag) {
-        dispatcher.dispatchResumeTag(tag);
+//        dispatcher.dispatchResumeTag(tag);
     }
 
 
@@ -206,7 +177,7 @@ public final class Sault {
     public void cancel(Object tag) {
         Task task = taskMap.get(tag);
         if (task != null) {
-            dispatcher.dispatchCancel(task);
+//            dispatcher.dispatchCancel(task);
         } else {
             if (isLoggingEnabled())
                 log("cancel failed. tag not exist!");
@@ -223,7 +194,7 @@ public final class Sault {
      */
     void shutdown() {
         dispatcher.shutdown();
-        HANDLER.removeCallbacksAndMessages(null);
+//        HANDLER.removeCallbacksAndMessages(null);
     }
 
 
@@ -232,14 +203,15 @@ public final class Sault {
         if (source == null) {
             taskMap.put(task.getTag(), task);
         }
-        submit(task);
+//        submit(task);
     }
 
 
     private Stats dump() {
-        Stats stats = dispatcher.getStats();
-        stats.taskSize = taskMap.size();
-        return stats;
+//        Stats stats = dispatcher.getStats();
+//        stats.taskSize = taskMap.size();
+//        return stats;
+        return null;
     }
 
     private void cancelTask(Task task) {
@@ -254,17 +226,17 @@ public final class Sault {
         enqueueAndSubmit(task);
     }
 
-    private void complete(TaskHunter hunter) {
-        Task single = hunter.getTask();
-        taskMap.remove(single.getTag());
-        Callback callback = single.getCallback();
-        if (callback != null) {
-            callback.onEvent(single.getTag(), Callback.EVENT_COMPLETE);
-            callback.onComplete(single.getTag(), single.getTarget().getAbsolutePath());
-        }
-    }
+//    private void complete(TaskHunter hunter) {
+//        Task single = hunter.getTask();
+//        taskMap.remove(single.getTag());
+//        Callback callback = single.getCallback();
+//        if (callback != null) {
+//            callback.onEvent(single.getTag(), Callback.EVENT_COMPLETE);
+//            callback.onComplete(single.getTag(), single.getTarget().getAbsolutePath());
+//        }
+//    }
 
-    private void submit(SaultTask task) {
+    public void submit(SaultTask task) {
         if (isLoggingEnabled())
             log("submit task. task=" + task.getKey());
         taskRequestEventDispatcher.dispatchSaultTaskSubmitRequest(task);

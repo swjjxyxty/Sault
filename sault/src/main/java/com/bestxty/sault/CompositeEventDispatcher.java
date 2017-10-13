@@ -6,7 +6,6 @@ import android.os.Looper;
 import android.os.Message;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static com.bestxty.sault.HunterEventHandler.HUNTER_CANCEL;
 import static com.bestxty.sault.HunterEventHandler.HUNTER_EXCEPTION;
 import static com.bestxty.sault.HunterEventHandler.HUNTER_FAILED;
 import static com.bestxty.sault.HunterEventHandler.HUNTER_FINISH;
@@ -14,6 +13,7 @@ import static com.bestxty.sault.HunterEventHandler.HUNTER_RETRY;
 import static com.bestxty.sault.HunterEventHandler.HUNTER_START;
 import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_CANCEL;
 import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_COMPLETE;
+import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_EXCEPTION;
 import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_PAUSE;
 import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_PROGRESS;
 import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_RESUME;
@@ -36,22 +36,19 @@ public class CompositeEventDispatcher extends AbstractCompositeEventDispatcher {
     private DispatcherThread dispatcherThread;
     private MainThreadHandler mainThreadHandler;
 
-    public CompositeEventDispatcher(MainThreadHandler mainThreadHandler) {
+    public CompositeEventDispatcher(MainThreadHandler mainThreadHandler,
+                                    DefaultEventHandler defaultEventHandler) {
         this.mainThreadHandler = mainThreadHandler;
         this.dispatcherThread = new DispatcherThread();
         dispatcherThread.start();
         hunterHandler
-                = new HunterEventDispatcherHandler(dispatcherThread.getLooper(), null, null);
+                = new HunterEventDispatcherHandler(dispatcherThread.getLooper(),
+                defaultEventHandler, defaultEventHandler);
     }
 
     @Override
     public void dispatchHunterStart(TaskHunter hunter) {
         hunterHandler.sendMessage(hunterHandler.obtainMessage(HUNTER_START, hunter));
-    }
-
-    @Override
-    public void dispatchHunterCancel(TaskHunter hunter) {
-        hunterHandler.sendMessage(hunterHandler.obtainMessage(HUNTER_CANCEL, hunter));
     }
 
     @Override
@@ -102,6 +99,11 @@ public class CompositeEventDispatcher extends AbstractCompositeEventDispatcher {
     @Override
     public void dispatchSaultTaskProgress(SaultTask task) {
         mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(SAULT_TASK_PROGRESS, task));
+    }
+
+    @Override
+    public void dispatchSaultTaskException(SaultTask task) {
+        mainThreadHandler.sendMessage(mainThreadHandler.obtainMessage(SAULT_TASK_EXCEPTION, task));
     }
 
     @Override
@@ -160,9 +162,6 @@ public class CompositeEventDispatcher extends AbstractCompositeEventDispatcher {
                     break;
                 case HUNTER_START:
                     hunterEventHandler.handleHunterStart(((TaskHunter) msg.obj));
-                    break;
-                case HUNTER_CANCEL:
-                    hunterEventHandler.handleHunterCancel(((TaskHunter) msg.obj));
                     break;
                 case HUNTER_RETRY:
                     hunterEventHandler.handleHunterRetry(((TaskHunter) msg.obj));

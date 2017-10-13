@@ -18,4 +18,6 @@ public interface SaultTaskEventDispatcher {
     void dispatchSaultTaskComplete(SaultTask task);
 
     void dispatchSaultTaskProgress(SaultTask task);
+
+    void dispatchSaultTaskException(SaultTask task);
 }
