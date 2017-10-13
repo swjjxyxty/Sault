@@ -82,18 +82,18 @@ public class MutilTaskActivity extends AppCompatActivity {
 
     private void initTaskList() {
         taskList = new ArrayList<>();
-        String baseUrl = "http://192.168.99.200:8000/";
-        taskList.add(new Task("test-task-0", "desc--0", baseUrl + "file0.exe", Sault.Priority.LOW));
-        taskList.add(new Task("test-task-1", "desc--1", baseUrl + "file1.exe", Sault.Priority.LOW));
-        taskList.add(new Task("test-task-2", "desc--2", baseUrl + "file2.exe", Sault.Priority.LOW));
+        String baseUrl = "http://download.ydstatic.cn/cidian/static/7.0/20170222/YoudaoDictSetup.exe";
+        taskList.add(new Task("test-task-0", "desc--0", baseUrl, Sault.Priority.LOW));
+        taskList.add(new Task("test-task-1", "desc--1", baseUrl, Sault.Priority.LOW));
+        taskList.add(new Task("test-task-2", "desc--2", baseUrl, Sault.Priority.LOW));
 
-        taskList.add(new Task("test-task-3", "desc--3", baseUrl + "file3.exe", Sault.Priority.NORMAL));
-        taskList.add(new Task("test-task-4", "desc--4", baseUrl + "file4.exe", Sault.Priority.NORMAL));
-        taskList.add(new Task("test-task-5", "desc--5", baseUrl + "file5.exe", Sault.Priority.NORMAL));
+        taskList.add(new Task("test-task-3", "desc--3", baseUrl, Sault.Priority.NORMAL));
+        taskList.add(new Task("test-task-4", "desc--4", baseUrl, Sault.Priority.NORMAL));
+        taskList.add(new Task("test-task-5", "desc--5", baseUrl, Sault.Priority.NORMAL));
 
-        taskList.add(new Task("test-task-6", "desc--6", baseUrl + "file6.exe", Sault.Priority.HIGH));
-        taskList.add(new Task("test-task-7", "desc--7", baseUrl + "file7.exe", Sault.Priority.HIGH));
-        taskList.add(new Task("test-task-8", "desc--8", baseUrl + "file8.exe", Sault.Priority.HIGH));
+        taskList.add(new Task("test-task-6", "desc--6", baseUrl, Sault.Priority.HIGH));
+        taskList.add(new Task("test-task-7", "desc--7", baseUrl, Sault.Priority.HIGH));
+        taskList.add(new Task("test-task-8", "desc--8", baseUrl, Sault.Priority.HIGH));
 
     }
 

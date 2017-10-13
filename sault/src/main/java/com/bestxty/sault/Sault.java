@@ -9,10 +9,7 @@ import com.bestxty.sault.dispatcher.AbstractCompositeEventDispatcher;
 import com.bestxty.sault.dispatcher.CompositeEventDispatcher;
 import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
 import com.bestxty.sault.handler.DefaultEventHandler;
-import com.bestxty.sault.handler.HunterEventHandler;
 import com.bestxty.sault.handler.MainThreadHandler;
-import com.bestxty.sault.handler.SaultTaskEventHandler;
-import com.bestxty.sault.handler.TaskRequestEventHandler;
 import com.bestxty.sault.task.SaultTask;
 import com.bestxty.sault.task.TaskBuilder;
 
@@ -73,11 +70,6 @@ public final class Sault {
      */
     private final AbstractCompositeEventDispatcher dispatcher;
     private final TaskRequestEventDispatcher taskRequestEventDispatcher;
-    private final MainThreadHandler mainThreadHandler;
-    private final TaskRequestEventHandler taskRequestEventHandler;
-    private final SaultTaskEventHandler saultTaskEventHandler;
-    private final HunterEventHandler hunterEventHandler;
-    private final NetworkStatusProvider networkStatusProvider;
 
     /**
      * file save dir.
@@ -104,22 +96,30 @@ public final class Sault {
         this.multiThreadEnabled = configuration.isMultiThreadEnabled();
         this.key = configuration.getKey();
         taskMap = new LinkedHashMap<>();
-
-
-        this.mainThreadHandler = new MainThreadHandler(Looper.getMainLooper());
-        this.saultTaskEventHandler = this.mainThreadHandler;
-        this.dispatcher = new CompositeEventDispatcher(mainThreadHandler, null);
-        this.taskRequestEventDispatcher = this.dispatcher;
-
-        this.networkStatusProvider = new DefaultNetworkStatusProvider(context);
+        MainThreadHandler mainThreadHandler = new MainThreadHandler(Looper.getMainLooper());
+        DefaultNetworkStatusProvider networkStatusProvider = new DefaultNetworkStatusProvider(context);
 
         ExecutorService executorService = configuration.getService();
         Downloader downloader = configuration.getDownloader();
-        this.taskRequestEventHandler
-                = new DefaultEventHandler(executorService, downloader,
-                this.dispatcher, this.networkStatusProvider);
-        this.hunterEventHandler = ((DefaultEventHandler) this.taskRequestEventHandler);
+        DefaultEventHandler defaultEventHandler
+                = new DefaultEventHandler(executorService, downloader, networkStatusProvider);
 
+        CompositeEventDispatcher compositeEventDispatcher
+                = new CompositeEventDispatcher(mainThreadHandler);
+
+        this.taskRequestEventDispatcher = compositeEventDispatcher;
+        this.dispatcher = compositeEventDispatcher;
+
+        defaultEventHandler.setHunterEventDispatcher(this.dispatcher);
+        defaultEventHandler.setTaskEventDispatcher(this.dispatcher);
+        defaultEventHandler.setTaskRequestEventDispatcher(this.dispatcher);
+
+        compositeEventDispatcher.setTaskRequestEventHandler(defaultEventHandler);
+        compositeEventDispatcher.setHunterEventHandler(defaultEventHandler);
+
+        if (networkStatusProvider.accessNetwork()) {
+            networkStatusProvider.register();
+        }
     }
 
     String getKey() {
@@ -166,7 +166,10 @@ public final class Sault {
      * @param tag task's tag. {@link SaultTask#getTag()}
      */
     public void pause(Object tag) {
-//        dispatcher.dispatchPauseTag(tag);
+        SaultTask task = taskMap.get(tag);
+        if (task != null) {
+            dispatcher.dispatchSaultTaskPauseRequest(task);
+        }
     }
 
 
@@ -176,7 +179,10 @@ public final class Sault {
      * @param tag task's tag. {@link SaultTask#getTag()}
      */
     public void resume(Object tag) {
-//        dispatcher.dispatchResumeTag(tag);
+        SaultTask task = taskMap.get(tag);
+        if (task != null) {
+            dispatcher.dispatchSaultTaskResumeRequest(task);
+        }
     }
 
 
@@ -186,10 +192,7 @@ public final class Sault {
     public void cancel(Object tag) {
         SaultTask task = taskMap.get(tag);
         if (task != null) {
-//            dispatcher.dispatchCancel(task);
-        } else {
-            if (isLoggingEnabled())
-                log("cancel failed. tag not exist!");
+            dispatcher.dispatchSaultTaskCancelRequest(task);
         }
     }
 
@@ -207,12 +210,12 @@ public final class Sault {
     }
 
 
-    void enqueueAndSubmit(SaultTask task) {
+    public void enqueueAndSubmit(SaultTask task) {
         SaultTask source = taskMap.get(task.getTag());
         if (source == null) {
             taskMap.put(task.getTag(), task);
         }
-//        submit(task);
+        submit(task);
     }
 
 
@@ -245,7 +248,7 @@ public final class Sault {
 //        }
 //    }
 
-    public void submit(SaultTask task) {
+    private void submit(SaultTask task) {
         if (isLoggingEnabled())
             log("submit task. task=" + task.getKey());
         taskRequestEventDispatcher.dispatchSaultTaskSubmitRequest(task);

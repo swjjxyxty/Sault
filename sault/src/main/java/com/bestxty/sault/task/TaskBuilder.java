@@ -87,7 +87,7 @@ public class TaskBuilder {
         SaultTask task = new DefaultSaultTask(sault, tag, uri, callback, target,
                 priority, breakPointEnabled);
 
-        sault.submit(task);
+        sault.enqueueAndSubmit(task);
 
         return task.getTag();
     }

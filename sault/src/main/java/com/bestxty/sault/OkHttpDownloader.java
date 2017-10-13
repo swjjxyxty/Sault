@@ -89,7 +89,13 @@ class OkHttpDownloader implements Downloader {
                 .head()
                 .build());
 
-        return handleResponse(response).contentLength;
+        String str = response.header("Content-Length");
+        if (str == null || "".equals(str)) {
+            return -1L;
+        }
+
+        return Long.valueOf(str);
+
     }
 
     @Override

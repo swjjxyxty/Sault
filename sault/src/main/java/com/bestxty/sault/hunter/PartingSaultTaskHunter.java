@@ -1,6 +1,7 @@
 package com.bestxty.sault.hunter;
 
 import com.bestxty.sault.Downloader;
+import com.bestxty.sault.Downloader.ContentLengthException;
 import com.bestxty.sault.dispatcher.HunterEventDispatcher;
 import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
 import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
@@ -52,6 +53,10 @@ public class PartingSaultTaskHunter extends AbstractTaskHunter {
             task.setStartTime(System.nanoTime());
             Downloader downloader = getDownloader();
             long totalSize = downloader.fetchContentLength(task.getUri());
+
+            if (totalSize == 0) {
+                throw new ContentLengthException("Received response with 0 content-length header.");
+            }
 
             task.setTotalSize(totalSize);
             createTargetFile(task.getTarget());

@@ -4,7 +4,6 @@ import android.net.NetworkInfo;
 
 import com.bestxty.sault.Downloader;
 import com.bestxty.sault.NetworkStatusProvider;
-import com.bestxty.sault.dispatcher.AbstractCompositeEventDispatcher;
 import com.bestxty.sault.dispatcher.HunterEventDispatcher;
 import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
 import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
@@ -31,7 +30,7 @@ import java.util.concurrent.Future;
 public class DefaultEventHandler implements TaskRequestEventHandler, HunterEventHandler {
 
     private final Map<Integer, TaskHunter> hunterMap = new ConcurrentHashMap<>();
-    private final Map<String, SaultTask> pausedTaskMap = new ConcurrentHashMap<>();
+    private final Map<String, List<SaultTask>> pausedTaskMap = new ConcurrentHashMap<>();
     private ExecutorService executorService;
     private Downloader downloader;
     private TaskRequestEventDispatcher taskRequestEventDispatcher;
@@ -41,13 +40,9 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
 
     public DefaultEventHandler(ExecutorService executorService,
                                Downloader downloader,
-                               AbstractCompositeEventDispatcher eventDispatcher,
                                NetworkStatusProvider networkStatusProvider) {
         this.executorService = executorService;
         this.downloader = downloader;
-        this.taskEventDispatcher = eventDispatcher;
-        this.taskRequestEventDispatcher = eventDispatcher;
-        this.hunterEventDispatcher = eventDispatcher;
         this.networkStatusProvider = networkStatusProvider;
     }
 
@@ -61,6 +56,18 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
                 taskRequestEventDispatcher);
     }
 
+    public void setTaskEventDispatcher(SaultTaskEventDispatcher taskEventDispatcher) {
+        this.taskEventDispatcher = taskEventDispatcher;
+    }
+
+    public void setTaskRequestEventDispatcher(TaskRequestEventDispatcher taskRequestEventDispatcher) {
+        this.taskRequestEventDispatcher = taskRequestEventDispatcher;
+    }
+
+    public void setHunterEventDispatcher(HunterEventDispatcher hunterEventDispatcher) {
+        this.hunterEventDispatcher = hunterEventDispatcher;
+    }
+
     @Override
     public void handleSaultTaskSubmitRequest(SaultTask task) {
         TaskHunter hunter = newTaskHunter(task);
@@ -71,36 +78,39 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
 
     @Override
     public void handleSaultTaskPauseRequest(SaultTask task) {
-        SaultTask saultTask = pausedTaskMap.get(task.getKey());
-        if (saultTask != null) {
+        List<SaultTask> tasks = pausedTaskMap.get(task.getKey());
+        if (tasks != null) {
             return;
         }
         List<Integer> hunterSequences = getHunterSequences(task);
-        cancelHunters(hunterSequences);
-        pausedTaskMap.put(task.getKey(), task);
+        List<SaultTask> canceledTasks = cancelHunters(hunterSequences);
+        pausedTaskMap.put(task.getKey(), canceledTasks);
         taskEventDispatcher.dispatchSaultTaskPause(task);
     }
 
     @Override
     public void handleSaultTaskResumeRequest(SaultTask task) {
-        SaultTask saultTask = pausedTaskMap.get(task.getKey());
-        if (saultTask == null) {
+        List<SaultTask> tasks = pausedTaskMap.get(task.getKey());
+        if (tasks == null) {
             return;
         }
-        handleSaultTaskSubmitRequest(task);
+        for (SaultTask saultTask : tasks) {
+            handleSaultTaskSubmitRequest(saultTask);
+        }
         pausedTaskMap.remove(task.getKey());
         taskEventDispatcher.dispatchSaultTaskResume(task);
     }
 
     @Override
     public void handleSaultTaskCancelRequest(SaultTask task) {
-        SaultTask saultTask = pausedTaskMap.get(task.getKey());
-        if (saultTask != null) {
+        List<SaultTask> tasks = pausedTaskMap.get(task.getKey());
+        if (tasks != null) {
             pausedTaskMap.remove(task.getKey());
+            taskEventDispatcher.dispatchSaultTaskCancel(task);
             return;
         }
         List<Integer> hunterSequences = getHunterSequences(task);
-        cancelHunters(hunterSequences);
+        cancelHunters(hunterSequences).clear();
         taskEventDispatcher.dispatchSaultTaskCancel(task);
     }
 
@@ -146,6 +156,7 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
 
     @Override
     public void handleHunterException(TaskHunter hunter) {
+        if(hunter.isCancelled())
         removeSelfAndDispatchException(hunter);
     }
 
@@ -167,6 +178,7 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
 
     @Override
     public void handleHunterFailed(TaskHunter hunter) {
+        if (hunter.isCancelled()) return;
         removeSelfAndDispatchException(hunter);
     }
 
@@ -190,12 +202,16 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
         return hunterSequences;
     }
 
-    private void cancelHunters(List<Integer> hunterSequences) {
+
+    private List<SaultTask> cancelHunters(List<Integer> hunterSequences) {
+        List<SaultTask> canceledTask = new ArrayList<>(hunterSequences.size());
         for (Integer hunterSequence : hunterSequences) {
             TaskHunter taskHunter = hunterMap.get(hunterSequence);
             if (taskHunter.cancel()) {
                 hunterMap.remove(hunterSequence);
+                canceledTask.add(taskHunter.getTask());
             }
         }
+        return canceledTask;
     }
 }

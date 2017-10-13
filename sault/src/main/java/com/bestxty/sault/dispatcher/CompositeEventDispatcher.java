@@ -5,7 +5,6 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
-import com.bestxty.sault.handler.DefaultEventHandler;
 import com.bestxty.sault.handler.HunterEventHandler;
 import com.bestxty.sault.handler.MainThreadHandler;
 import com.bestxty.sault.handler.TaskRequestEventHandler;
@@ -43,14 +42,20 @@ public class CompositeEventDispatcher extends AbstractCompositeEventDispatcher {
     private DispatcherThread dispatcherThread;
     private MainThreadHandler mainThreadHandler;
 
-    public CompositeEventDispatcher(MainThreadHandler mainThreadHandler,
-                                    DefaultEventHandler defaultEventHandler) {
+    public CompositeEventDispatcher(MainThreadHandler mainThreadHandler) {
         this.mainThreadHandler = mainThreadHandler;
         this.dispatcherThread = new DispatcherThread();
         dispatcherThread.start();
         hunterHandler
-                = new HunterEventDispatcherHandler(dispatcherThread.getLooper(),
-                defaultEventHandler, defaultEventHandler);
+                = new HunterEventDispatcherHandler(dispatcherThread.getLooper());
+    }
+
+    public void setHunterEventHandler(HunterEventHandler hunterEventHandler) {
+        hunterHandler.setHunterEventHandler(hunterEventHandler);
+    }
+
+    public void setTaskRequestEventHandler(TaskRequestEventHandler taskRequestEventHandler) {
+        hunterHandler.setTaskRequestEventHandler(taskRequestEventHandler);
     }
 
     @Override
@@ -145,11 +150,16 @@ public class CompositeEventDispatcher extends AbstractCompositeEventDispatcher {
         private TaskRequestEventHandler taskRequestEventHandler;
         private HunterEventHandler hunterEventHandler;
 
-        public HunterEventDispatcherHandler(Looper looper, TaskRequestEventHandler taskRequestEventHandler,
-                                            HunterEventHandler hunterEventHandler) {
+        public HunterEventDispatcherHandler(Looper looper) {
             super(looper);
-            this.taskRequestEventHandler = taskRequestEventHandler;
+        }
+
+        public void setHunterEventHandler(HunterEventHandler hunterEventHandler) {
             this.hunterEventHandler = hunterEventHandler;
+        }
+
+        public void setTaskRequestEventHandler(TaskRequestEventHandler taskRequestEventHandler) {
+            this.taskRequestEventHandler = taskRequestEventHandler;
         }
 
         @Override

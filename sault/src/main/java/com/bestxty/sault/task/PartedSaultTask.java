@@ -2,6 +2,8 @@ package com.bestxty.sault.task;
 
 import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/12.
@@ -13,6 +15,7 @@ public class PartedSaultTask extends DefaultSaultTask {
     private final long endPosition;
     private final SaultTask task;
     private final SaultTaskEventDispatcher eventDispatcher;
+    private final AtomicLong finishedSize = new AtomicLong();
 
     public PartedSaultTask(SaultTask task, SaultTaskEventDispatcher eventDispatcher,
                            long startPosition, long endPosition) {
@@ -25,7 +28,7 @@ public class PartedSaultTask extends DefaultSaultTask {
     }
 
     public long getStartPosition() {
-        return startPosition;
+        return startPosition + finishedSize.get();
     }
 
     public long getEndPosition() {
@@ -41,6 +44,7 @@ public class PartedSaultTask extends DefaultSaultTask {
     @Override
     public void notifyFinishedSize(long stepSize) {
         task.notifyFinishedSize(stepSize);
+        finishedSize.addAndGet(stepSize);
         eventDispatcher.dispatchSaultTaskProgress(task);
     }
 }
