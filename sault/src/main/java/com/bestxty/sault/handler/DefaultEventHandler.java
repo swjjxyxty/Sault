@@ -156,8 +156,8 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
 
     @Override
     public void handleHunterException(TaskHunter hunter) {
-        if(hunter.isCancelled())
-        removeSelfAndDispatchException(hunter);
+        if (hunter.isCancelled())
+            removeSelfAndDispatchException(hunter);
     }
 
     @Override

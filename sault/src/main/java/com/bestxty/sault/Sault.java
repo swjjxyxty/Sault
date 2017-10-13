@@ -206,7 +206,6 @@ public final class Sault {
      */
     void shutdown() {
         dispatcher.shutdown();
-//        HANDLER.removeCallbacksAndMessages(null);
     }
 
 

@@ -1,1 +1,1 @@
-include ':app', ':sault', ':sault_rpc'
+include ':app', ':sault', ':sault_rpc', ':apt'
