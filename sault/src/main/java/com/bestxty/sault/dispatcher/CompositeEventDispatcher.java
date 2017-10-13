@@ -1,28 +1,35 @@
-package com.bestxty.sault;
+package com.bestxty.sault.dispatcher;
 
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
+import com.bestxty.sault.handler.DefaultEventHandler;
+import com.bestxty.sault.handler.HunterEventHandler;
+import com.bestxty.sault.handler.MainThreadHandler;
+import com.bestxty.sault.handler.TaskRequestEventHandler;
+import com.bestxty.sault.hunter.TaskHunter;
+import com.bestxty.sault.task.SaultTask;
+
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
-import static com.bestxty.sault.HunterEventHandler.HUNTER_EXCEPTION;
-import static com.bestxty.sault.HunterEventHandler.HUNTER_FAILED;
-import static com.bestxty.sault.HunterEventHandler.HUNTER_FINISH;
-import static com.bestxty.sault.HunterEventHandler.HUNTER_RETRY;
-import static com.bestxty.sault.HunterEventHandler.HUNTER_START;
-import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_CANCEL;
-import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_COMPLETE;
-import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_EXCEPTION;
-import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_PAUSE;
-import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_PROGRESS;
-import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_RESUME;
-import static com.bestxty.sault.SaultTaskEventHandler.SAULT_TASK_START;
-import static com.bestxty.sault.TaskRequestEventHandler.TASK_CANCEL_REQUEST;
-import static com.bestxty.sault.TaskRequestEventHandler.TASK_PAUSE_REQUEST;
-import static com.bestxty.sault.TaskRequestEventHandler.TASK_RESUME_REQUEST;
-import static com.bestxty.sault.TaskRequestEventHandler.TASK_SUBMIT_REQUEST;
 import static com.bestxty.sault.Utils.DISPATCHER_THREAD_NAME;
+import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_EXCEPTION;
+import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_FAILED;
+import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_FINISH;
+import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_RETRY;
+import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_START;
+import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_CANCEL;
+import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_COMPLETE;
+import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_EXCEPTION;
+import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_PAUSE;
+import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_PROGRESS;
+import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_RESUME;
+import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_START;
+import static com.bestxty.sault.handler.TaskRequestEventHandler.TASK_CANCEL_REQUEST;
+import static com.bestxty.sault.handler.TaskRequestEventHandler.TASK_PAUSE_REQUEST;
+import static com.bestxty.sault.handler.TaskRequestEventHandler.TASK_RESUME_REQUEST;
+import static com.bestxty.sault.handler.TaskRequestEventHandler.TASK_SUBMIT_REQUEST;
 
 /**
  * @author 姜泰阳
@@ -127,7 +134,7 @@ public class CompositeEventDispatcher extends AbstractCompositeEventDispatcher {
     }
 
     @Override
-    void shutdown() {
+    public void shutdown() {
         hunterHandler.removeCallbacksAndMessages(null);
         dispatcherThread.quit();
     }

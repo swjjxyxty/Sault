@@ -1,6 +1,9 @@
-package com.bestxty.sault;
+package com.bestxty.sault.task;
 
 import android.net.Uri;
+
+import com.bestxty.sault.Callback;
+import com.bestxty.sault.Sault;
 
 import java.io.File;
 
@@ -22,7 +25,7 @@ public class TaskBuilder {
     private Boolean multiThreadEnabled = null;
     private Boolean breakPointEnabled = null;
 
-    TaskBuilder(Sault sault, Uri uri) {
+    public TaskBuilder(Sault sault, Uri uri) {
         this.sault = sault;
         this.uri = uri;
     }

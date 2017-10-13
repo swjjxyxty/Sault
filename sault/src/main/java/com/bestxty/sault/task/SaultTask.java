@@ -1,7 +1,9 @@
-package com.bestxty.sault;
+package com.bestxty.sault.task;
 
 import android.net.Uri;
 
+import com.bestxty.sault.Callback;
+import com.bestxty.sault.Sault;
 import com.bestxty.sault.Sault.Priority;
 
 import java.io.File;

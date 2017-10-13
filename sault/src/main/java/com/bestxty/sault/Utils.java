@@ -7,6 +7,8 @@ import android.os.Process;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.bestxty.sault.task.SaultTask;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -18,31 +20,31 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author xty
  *         Created by xty on 2016/12/9.
  */
-final class Utils {
+public final class Utils {
 
     private static final String TAG = "Sault";
-    static final String THREAD_PREFIX = "Sault-";
-    static final String DISPATCHER_THREAD_NAME = THREAD_PREFIX + "Dispatcher";
-    static final String THREAD_IDLE_NAME = THREAD_PREFIX + "Idle";
+    public static final String THREAD_PREFIX = "Sault-";
+    public static final String DISPATCHER_THREAD_NAME = THREAD_PREFIX + "Dispatcher";
+    public static final String THREAD_IDLE_NAME = THREAD_PREFIX + "Idle";
 
 
-    static final int EOF = -1;
+    public  static final int EOF = -1;
 
-    static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+    public static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
     static final int DEFAULT_READ_TIMEOUT_MILLIS = 20 * 1000; // 20s
     static final int DEFAULT_WRITE_TIMEOUT_MILLIS = 20 * 1000; // 20s
     static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 15 * 1000; // 15s
 
-    static void log(String msg) {
+    public static void log(String msg) {
         Log.d(TAG, msg);
     }
 
-    static void log(String msg, Throwable throwable) {
+    public static void log(String msg, Throwable throwable) {
         Log.e(TAG, msg, throwable);
     }
 
 
-    static void closeQuietly(Closeable closeable) {
+    public   static void closeQuietly(Closeable closeable) {
         try {
             if (closeable != null) {
                 closeable.close();
@@ -52,7 +54,7 @@ final class Utils {
         }
     }
 
-    static void createTargetFile(File file) throws IOException {
+    public  static void createTargetFile(File file) throws IOException {
         if (file.exists()) {
             if (file.isDirectory()) {
                 throw new IOException("File '" + file + "' exists but is a directory");
@@ -90,97 +92,6 @@ final class Utils {
         return context.checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
     }
 
-
-    interface Informer {
-        void callNotify();
-    }
-
-    static class ErrorInformer implements Informer {
-        private Callback callback;
-        private SaultException exception;
-
-        ErrorInformer(SaultException exception, Callback callback) {
-            this.exception = exception;
-            this.callback = callback;
-        }
-
-        static ErrorInformer create(Callback callback, SaultException exception) {
-            return new ErrorInformer(exception, callback);
-        }
-
-        @Override
-        public void callNotify() {
-            if (callback != null) {
-                callback.onError(exception);
-            }
-        }
-
-    }
-
-
-    static class ProgressInformer implements Informer {
-        Object tag;
-        long totalSize;
-        long finishedSize;
-        private Callback callback;
-
-        private ProgressInformer(Object tag,
-                                 Callback callback) {
-            this.tag = tag;
-            this.callback = callback;
-        }
-
-
-        private ProgressInformer(ProgressInformer informer) {
-            this.tag = informer.tag;
-            this.totalSize = informer.totalSize;
-            this.finishedSize = informer.finishedSize;
-            this.callback = informer.callback;
-        }
-
-        static ProgressInformer create(ProgressInformer informer) {
-            return new ProgressInformer(informer);
-        }
-
-
-        static ProgressInformer create(Task task) {
-            return new ProgressInformer(task.getTag(), task.getCallback());
-        }
-
-
-        @Override
-        public void callNotify() {
-            if (callback != null) {
-                callback.onProgress(tag, totalSize, finishedSize);
-            }
-        }
-
-    }
-
-
-    static class EventInformer implements Informer {
-        int event;
-        Task task;
-        private Callback callback;
-
-        private EventInformer(Task task, int event, Callback callback) {
-            this.task = task;
-            this.event = event;
-            this.callback = callback;
-        }
-
-        static EventInformer create(Task task, int event) {
-            return new EventInformer(task, event, task.getCallback());
-        }
-
-        @Override
-        public void callNotify() {
-            if (callback != null) {
-                callback.onEvent(task.getTag(), event);
-            }
-        }
-
-    }
 
     static class DownloadThreadFactory implements ThreadFactory {
         @SuppressWarnings("NullableProblems")
@@ -258,7 +169,7 @@ final class Utils {
     };
 
 
-    static String getHunterThreadName(SaultTask task) {
+    public static String getHunterThreadName(SaultTask task) {
         String name = task.getKey() + "-" + task.getId();
         StringBuilder builder = NAME_BUILDER.get();
         builder.ensureCapacity(Utils.THREAD_PREFIX.length() + name.length());

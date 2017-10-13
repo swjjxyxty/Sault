@@ -1,8 +1,20 @@
-package com.bestxty.sault;
+package com.bestxty.sault.handler;
 
 import android.net.NetworkInfo;
 
-import com.bestxty.sault.SaultTask.Progress;
+import com.bestxty.sault.Downloader;
+import com.bestxty.sault.NetworkStatusProvider;
+import com.bestxty.sault.dispatcher.AbstractCompositeEventDispatcher;
+import com.bestxty.sault.dispatcher.HunterEventDispatcher;
+import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
+import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
+import com.bestxty.sault.hunter.DefaultSaultTaskHunter;
+import com.bestxty.sault.hunter.PartingSaultTaskHunter;
+import com.bestxty.sault.hunter.TaskHunter;
+import com.bestxty.sault.task.ExceptionSaultTask;
+import com.bestxty.sault.task.PartedSaultTask;
+import com.bestxty.sault.task.SaultTask;
+import com.bestxty.sault.task.SaultTask.Progress;
 
 import java.util.ArrayList;
 import java.util.List;

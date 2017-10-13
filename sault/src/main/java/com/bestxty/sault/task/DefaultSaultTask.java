@@ -1,8 +1,11 @@
-package com.bestxty.sault;
+package com.bestxty.sault.task;
 
 import android.net.Uri;
 
+import com.bestxty.sault.Callback;
+import com.bestxty.sault.Sault;
 import com.bestxty.sault.Sault.Priority;
+import com.bestxty.sault.Utils;
 
 import java.io.File;
 import java.util.concurrent.atomic.AtomicLong;

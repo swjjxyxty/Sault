@@ -1,8 +1,12 @@
-package com.bestxty.sault;
+package com.bestxty.sault.hunter;
 
+import com.bestxty.sault.Downloader;
 import com.bestxty.sault.Downloader.ContentLengthException;
 import com.bestxty.sault.Downloader.Response;
 import com.bestxty.sault.Downloader.ResponseException;
+import com.bestxty.sault.dispatcher.HunterEventDispatcher;
+import com.bestxty.sault.task.PartedSaultTask;
+import com.bestxty.sault.task.SaultTask;
 
 import java.io.IOException;
 import java.io.InputStream;

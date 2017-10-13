@@ -1,4 +1,6 @@
-package com.bestxty.sault;
+package com.bestxty.sault.handler;
+
+import com.bestxty.sault.task.SaultTask;
 
 /**
  * @author 姜泰阳

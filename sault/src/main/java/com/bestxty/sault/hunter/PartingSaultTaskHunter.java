@@ -1,4 +1,11 @@
-package com.bestxty.sault;
+package com.bestxty.sault.hunter;
+
+import com.bestxty.sault.Downloader;
+import com.bestxty.sault.dispatcher.HunterEventDispatcher;
+import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
+import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
+import com.bestxty.sault.task.PartedSaultTask;
+import com.bestxty.sault.task.SaultTask;
 
 import java.io.RandomAccessFile;
 import java.util.ArrayList;

@@ -5,6 +5,17 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
 
+import com.bestxty.sault.dispatcher.AbstractCompositeEventDispatcher;
+import com.bestxty.sault.dispatcher.CompositeEventDispatcher;
+import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
+import com.bestxty.sault.handler.DefaultEventHandler;
+import com.bestxty.sault.handler.HunterEventHandler;
+import com.bestxty.sault.handler.MainThreadHandler;
+import com.bestxty.sault.handler.SaultTaskEventHandler;
+import com.bestxty.sault.handler.TaskRequestEventHandler;
+import com.bestxty.sault.task.SaultTask;
+import com.bestxty.sault.task.TaskBuilder;
+
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -76,7 +87,7 @@ public final class Sault {
     /**
      * task map.
      */
-    private final Map<Object, Task> taskMap;
+    private final Map<Object, SaultTask> taskMap;
 
     private final String key;
 
@@ -115,7 +126,7 @@ public final class Sault {
         return key;
     }
 
-    File getSaveDir() {
+    public File getSaveDir() {
         return saveDir;
     }
 
@@ -152,7 +163,7 @@ public final class Sault {
     /**
      * pause task by tag.
      *
-     * @param tag task's tag. {@link Task#getTag()}
+     * @param tag task's tag. {@link SaultTask#getTag()}
      */
     public void pause(Object tag) {
 //        dispatcher.dispatchPauseTag(tag);
@@ -162,7 +173,7 @@ public final class Sault {
     /**
      * resume task by tag.
      *
-     * @param tag task's tag. {@link Task#getTag()}
+     * @param tag task's tag. {@link SaultTask#getTag()}
      */
     public void resume(Object tag) {
 //        dispatcher.dispatchResumeTag(tag);
@@ -171,11 +182,9 @@ public final class Sault {
 
     /**
      * cancel task by tag.
-     *
-     * @param tag task's tag. {@link Task#getTag()}
      */
     public void cancel(Object tag) {
-        Task task = taskMap.get(tag);
+        SaultTask task = taskMap.get(tag);
         if (task != null) {
 //            dispatcher.dispatchCancel(task);
         } else {
@@ -198,8 +207,8 @@ public final class Sault {
     }
 
 
-    void enqueueAndSubmit(Task task) {
-        Task source = taskMap.get(task.getTag());
+    void enqueueAndSubmit(SaultTask task) {
+        SaultTask source = taskMap.get(task.getTag());
         if (source == null) {
             taskMap.put(task.getTag(), task);
         }
@@ -214,11 +223,11 @@ public final class Sault {
         return null;
     }
 
-    private void cancelTask(Task task) {
+    private void cancelTask(SaultTask task) {
         taskMap.remove(task.getTag());
     }
 
-    private void resumeTask(Task task) {
+    private void resumeTask(SaultTask task) {
         Callback callback = task.getCallback();
         if (callback != null) {
             callback.onEvent(task.getTag(), Callback.EVENT_RESUME);

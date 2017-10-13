@@ -1,4 +1,6 @@
-package com.bestxty.sault;
+package com.bestxty.sault.dispatcher;
+
+import com.bestxty.sault.hunter.TaskHunter;
 
 /**
  * @author 姜泰阳

@@ -38,8 +38,8 @@ public interface Downloader {
      * detect uri resource content length
      *
      * @param uri uri
-     * @throws IOException exception
      * @return content length
+     * @throws IOException exception
      */
     long fetchContentLength(Uri uri) throws IOException;
 
@@ -70,7 +70,7 @@ public interface Downloader {
      * content length exception.
      */
     class ContentLengthException extends IOException {
-        ContentLengthException(String message) {
+        public ContentLengthException(String message) {
             super(message);
         }
     }
@@ -81,17 +81,17 @@ public interface Downloader {
     class ResponseException extends IOException {
         final int responseCode;
 
-        ResponseException(String message, int responseCode) {
+        public ResponseException(String message, int responseCode) {
             super(message);
             this.responseCode = responseCode;
         }
     }
 
     class Response {
-        InputStream stream;
-        long contentLength;
+        public   final InputStream stream;
+        public  final long contentLength;
 
-        Response(InputStream stream, long contentLength) {
+        public   Response(InputStream stream, long contentLength) {
             this.stream = stream;
             this.contentLength = contentLength;
         }

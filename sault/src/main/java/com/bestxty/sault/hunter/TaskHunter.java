@@ -1,6 +1,9 @@
-package com.bestxty.sault;
+package com.bestxty.sault.hunter;
 
 import android.net.NetworkInfo;
+
+import com.bestxty.sault.Sault;
+import com.bestxty.sault.task.SaultTask;
 
 import java.util.concurrent.Future;
 
@@ -10,7 +13,7 @@ import static com.bestxty.sault.Sault.Priority;
  * @author swjjx
  *         Created by swjjx on 2017/1/21. for DownloadLibrary
  */
-interface TaskHunter extends Runnable {
+public interface TaskHunter extends Runnable {
 
     Sault getSault();
 

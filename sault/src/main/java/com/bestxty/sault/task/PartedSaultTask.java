@@ -1,4 +1,6 @@
-package com.bestxty.sault;
+package com.bestxty.sault.task;
+
+import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
 
 /**
  * @author 姜泰阳

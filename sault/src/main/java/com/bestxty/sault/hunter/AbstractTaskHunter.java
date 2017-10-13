@@ -1,6 +1,11 @@
-package com.bestxty.sault;
+package com.bestxty.sault.hunter;
 
 import android.net.NetworkInfo;
+
+import com.bestxty.sault.Downloader;
+import com.bestxty.sault.Sault;
+import com.bestxty.sault.Utils;
+import com.bestxty.sault.task.SaultTask;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
