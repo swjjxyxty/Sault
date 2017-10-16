@@ -7,14 +7,17 @@ import android.os.Message;
 import com.bestxty.sault.SaultException;
 import com.bestxty.sault.task.ExceptionSaultTask;
 import com.bestxty.sault.task.SaultTask;
+import com.bestxty.sunshine.annotation.Autowired;
+import com.bestxty.sunshine.annotation.Component;
 
 /**
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/12.
  */
-
+@Component
 public class MainThreadHandler extends Handler implements SaultTaskEventHandler {
 
+    @Autowired
     public MainThreadHandler(Looper looper) {
         super(looper);
     }

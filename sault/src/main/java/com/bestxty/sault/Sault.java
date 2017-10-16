@@ -12,6 +12,8 @@ import com.bestxty.sault.handler.DefaultEventHandler;
 import com.bestxty.sault.handler.MainThreadHandler;
 import com.bestxty.sault.task.SaultTask;
 import com.bestxty.sault.task.TaskBuilder;
+import com.bestxty.sunshine.annotation.Autowired;
+import com.bestxty.sunshine.annotation.Bean;
 
 import java.io.File;
 import java.util.LinkedHashMap;
@@ -68,6 +70,7 @@ public final class Sault {
     /**
      * task dispatcher.
      */
+    @Autowired
     private final AbstractCompositeEventDispatcher dispatcher;
     private final TaskRequestEventDispatcher taskRequestEventDispatcher;
 
@@ -88,6 +91,11 @@ public final class Sault {
     private boolean breakPointEnabled;
 
     private boolean multiThreadEnabled;
+
+    @Bean("mainLooper")
+    public static Looper mainLooper() {
+        return Looper.getMainLooper();
+    }
 
     Sault(SaultConfiguration configuration, Context context) {
         this.saveDir = configuration.getSaveDir();

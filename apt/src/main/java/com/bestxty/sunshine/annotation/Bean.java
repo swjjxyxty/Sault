@@ -8,18 +8,18 @@ import java.lang.annotation.Target;
 
 /**
  * @author 姜泰阳
- *         Created by 姜泰阳 on 2017/10/13.
+ *         Created by 姜泰阳 on 2017/10/16.
  */
 
-@Target({ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.METHOD})
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-public @interface Autowired {
+public @interface Bean {
 
-    /**
-     * Declares whether the annotated dependency is required.
-     * <p>Defaults to {@code true}.
-     */
-    boolean required() default true;
+    String value() default "";
+
+    String initMethod() default "";
+
+    String destroyMethod() default "";
 
 }
