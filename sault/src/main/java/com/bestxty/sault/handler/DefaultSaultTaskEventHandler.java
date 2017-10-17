@@ -1,52 +1,21 @@
 package com.bestxty.sault.handler;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-
 import com.bestxty.sault.SaultException;
 import com.bestxty.sault.task.ExceptionSaultTask;
 import com.bestxty.sault.task.SaultTask;
-import com.bestxty.sunshine.annotation.Autowired;
-import com.bestxty.sunshine.annotation.Component;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * @author 姜泰阳
- *         Created by 姜泰阳 on 2017/10/12.
+ *         Created by 姜泰阳 on 2017/10/17.
  */
-@Component
-public class MainThreadHandler extends Handler implements SaultTaskEventHandler {
+@Singleton
+public class DefaultSaultTaskEventHandler implements SaultTaskEventHandler {
 
-    @Autowired
-    public MainThreadHandler(Looper looper) {
-        super(looper);
-    }
-
-    @Override
-    public void handleMessage(Message msg) {
-        switch (msg.what) {
-            case SAULT_TASK_START:
-                handleSaultTaskStart(((SaultTask) msg.obj));
-                break;
-            case SAULT_TASK_PAUSE:
-                handleSaultTaskPause(((SaultTask) msg.obj));
-                break;
-            case SAULT_TASK_RESUME:
-                handleSaultTaskResume(((SaultTask) msg.obj));
-                break;
-            case SAULT_TASK_CANCEL:
-                handleSaultTaskCancel(((SaultTask) msg.obj));
-                break;
-            case SAULT_TASK_COMPLETE:
-                handleSaultTaskComplete(((SaultTask) msg.obj));
-                break;
-            case SAULT_TASK_PROGRESS:
-                handleSaultTaskProgress(((SaultTask) msg.obj));
-                break;
-            case SAULT_TASK_EXCEPTION:
-                handleSaultTaskException(((SaultTask) msg.obj));
-                break;
-        }
+    @Inject
+    public DefaultSaultTaskEventHandler() {
     }
 
     @Override

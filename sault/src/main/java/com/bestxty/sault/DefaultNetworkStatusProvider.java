@@ -10,6 +10,9 @@ import android.net.NetworkInfo;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
 import static android.content.Context.CONNECTIVITY_SERVICE;
 import static android.content.Intent.ACTION_AIRPLANE_MODE_CHANGED;
@@ -20,13 +23,14 @@ import static com.bestxty.sault.Utils.getService;
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/13.
  */
-
+@Singleton
 public class DefaultNetworkStatusProvider extends BroadcastReceiver implements NetworkStatusProvider {
 
     private final Context context;
     private final boolean accessNetwork;
     private final List<NetworkStatusListener> listeners;
 
+    @Inject
     public DefaultNetworkStatusProvider(Context context) {
         this.context = context;
         this.accessNetwork = Utils.hasPermission(context, ACCESS_NETWORK_STATE);

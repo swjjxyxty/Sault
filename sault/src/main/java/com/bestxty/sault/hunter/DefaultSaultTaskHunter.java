@@ -5,6 +5,8 @@ import com.bestxty.sault.Downloader.ContentLengthException;
 import com.bestxty.sault.Downloader.Response;
 import com.bestxty.sault.Downloader.ResponseException;
 import com.bestxty.sault.dispatcher.HunterEventDispatcher;
+import com.bestxty.sault.internal.di.components.DaggerHunterComponent;
+import com.bestxty.sault.internal.di.modules.HunterModule;
 import com.bestxty.sault.task.PartedSaultTask;
 import com.bestxty.sault.task.SaultTask;
 
@@ -12,6 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
+
+import javax.inject.Inject;
 
 import static com.bestxty.sault.Utils.DEFAULT_BUFFER_SIZE;
 import static com.bestxty.sault.Utils.EOF;
@@ -25,13 +29,18 @@ import static com.bestxty.sault.Utils.log;
 
 public class DefaultSaultTaskHunter extends AbstractTaskHunter {
 
-    private final HunterEventDispatcher eventDispatcher;
+    @Inject
+    HunterEventDispatcher eventDispatcher;
+
     private Exception exception;
 
-    public DefaultSaultTaskHunter(PartedSaultTask task, Downloader downloader,
-                                  HunterEventDispatcher eventDispatcher) {
-        super(task, downloader);
-        this.eventDispatcher = eventDispatcher;
+    public DefaultSaultTaskHunter(PartedSaultTask task) {
+        super(task);
+        DaggerHunterComponent.builder()
+                .saultComponent(task.getSault().getSaultComponent())
+                .hunterModule(new HunterModule())
+                .build()
+                .inject(this);
     }
 
     @Override

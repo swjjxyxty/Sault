@@ -3,22 +3,20 @@ package com.bestxty.sault;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.Looper;
 
-import com.bestxty.sault.dispatcher.AbstractCompositeEventDispatcher;
-import com.bestxty.sault.dispatcher.CompositeEventDispatcher;
 import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
-import com.bestxty.sault.handler.DefaultEventHandler;
-import com.bestxty.sault.handler.MainThreadHandler;
+import com.bestxty.sault.internal.di.components.DaggerSaultComponent;
+import com.bestxty.sault.internal.di.components.SaultComponent;
+import com.bestxty.sault.internal.di.modules.SaultModule;
 import com.bestxty.sault.task.SaultTask;
 import com.bestxty.sault.task.TaskBuilder;
-import com.bestxty.sunshine.annotation.Autowired;
-import com.bestxty.sunshine.annotation.Bean;
 
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
+
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import static com.bestxty.sault.Utils.log;
 
@@ -42,19 +40,30 @@ public final class Sault {
         DEFAULT_CONFIGURATION = configuration;
     }
 
-    public static Sault getInstance(SaultConfiguration configuration, Context context) {
-        if (configuration == null) {
-            throw new NullPointerException("A non-null SaultConfiguration must be provided");
-        }
-        return SaultCache.createSaultOrGetFromCache(configuration, context);
-    }
-
 
     public static Sault getInstance(Context context) {
         if (DEFAULT_CONFIGURATION == null) {
             throw new NullPointerException("No default SaultConfiguration was found. Call setDefaultConfiguration() first.");
         }
-        return SaultCache.createSaultOrGetFromCache(DEFAULT_CONFIGURATION, context);
+        Sault sault = SaultHolder.INSTANCE.getSault();
+        if (sault == null) {
+            return SaultHolder.INSTANCE.newSault(DEFAULT_CONFIGURATION, context);
+        }
+        return sault;
+    }
+
+    private enum SaultHolder {
+        INSTANCE;
+        private Sault sault;
+
+        public Sault newSault(SaultConfiguration configuration, Context context) {
+            this.sault = new Sault(configuration, context);
+            return this.sault;
+        }
+
+        public Sault getSault() {
+            return sault;
+        }
     }
 
     /**
@@ -70,63 +79,80 @@ public final class Sault {
     /**
      * task dispatcher.
      */
-    @Autowired
-    private final AbstractCompositeEventDispatcher dispatcher;
-    private final TaskRequestEventDispatcher taskRequestEventDispatcher;
+    @Inject
+    TaskRequestEventDispatcher taskRequestEventDispatcher;
 
     /**
      * file save dir.
      */
-    private final File saveDir;
+    @Inject
+    File saveDir;
 
     /**
      * task map.
      */
     private final Map<Object, SaultTask> taskMap;
 
-    private final String key;
+    @Inject
+    @Named("saultKey")
+    String key;
 
-    private volatile boolean loggingEnabled;
+    @Inject
+    @Named("loggingEnabled")
+    volatile boolean loggingEnabled;
 
-    private boolean breakPointEnabled;
+    @Inject
+    @Named("breakPointEnabled")
+    boolean breakPointEnabled;
 
-    private boolean multiThreadEnabled;
+    @Inject
+    @Named("multiThreadEnabled")
+    boolean multiThreadEnabled;
 
-    @Bean("mainLooper")
-    public static Looper mainLooper() {
-        return Looper.getMainLooper();
+    @Inject
+    NetworkStatusProvider networkStatusProvider;
+
+    private SaultComponent saultComponent;
+
+    public SaultComponent getSaultComponent() {
+        return saultComponent;
     }
 
     Sault(SaultConfiguration configuration, Context context) {
-        this.saveDir = configuration.getSaveDir();
-        this.loggingEnabled = configuration.isLoggingEnabled();
-        this.breakPointEnabled = configuration.isBreakPointEnabled();
-        this.multiThreadEnabled = configuration.isMultiThreadEnabled();
-        this.key = configuration.getKey();
+        saultComponent = DaggerSaultComponent.builder()
+                .saultModule(new SaultModule(context, configuration))
+                .build();
+        saultComponent.inject(this);
+
+//        this.saveDir = configuration.getSaveDir();
+//        this.loggingEnabled = configuration.isLoggingEnabled();
+//        this.breakPointEnabled = configuration.isBreakPointEnabled();
+//        this.multiThreadEnabled = configuration.isMultiThreadEnabled();
+//        this.key = configuration.getKey();
         taskMap = new LinkedHashMap<>();
-        MainThreadHandler mainThreadHandler = new MainThreadHandler(Looper.getMainLooper());
-        DefaultNetworkStatusProvider networkStatusProvider = new DefaultNetworkStatusProvider(context);
-
-        ExecutorService executorService = configuration.getService();
-        Downloader downloader = configuration.getDownloader();
-        DefaultEventHandler defaultEventHandler
-                = new DefaultEventHandler(executorService, downloader, networkStatusProvider);
-
-        CompositeEventDispatcher compositeEventDispatcher
-                = new CompositeEventDispatcher(mainThreadHandler);
-
-        this.taskRequestEventDispatcher = compositeEventDispatcher;
-        this.dispatcher = compositeEventDispatcher;
-
-        defaultEventHandler.setHunterEventDispatcher(this.dispatcher);
-        defaultEventHandler.setTaskEventDispatcher(this.dispatcher);
-        defaultEventHandler.setTaskRequestEventDispatcher(this.dispatcher);
-
-        compositeEventDispatcher.setTaskRequestEventHandler(defaultEventHandler);
-        compositeEventDispatcher.setHunterEventHandler(defaultEventHandler);
-
+//        MainThreadHandler mainThreadHandler = new MainThreadHandler(Looper.getMainLooper());
+//        DefaultNetworkStatusProvider networkStatusProvider = new DefaultNetworkStatusProvider(context);
+//
+//        ExecutorService executorService = configuration.getService();
+//        Downloader downloader = configuration.getDownloader();
+//        DefaultEventHandler defaultEventHandler
+//                = new DefaultEventHandler(executorService, downloader, networkStatusProvider);
+//
+//        CompositeEventDispatcher compositeEventDispatcher
+//                = new CompositeEventDispatcher(mainThreadHandler);
+//
+//        this.taskRequestEventDispatcher = compositeEventDispatcher;
+//        this.dispatcher = compositeEventDispatcher;
+//
+//        defaultEventHandler.setHunterEventDispatcher(this.dispatcher);
+//        defaultEventHandler.setTaskEventDispatcher(this.dispatcher);
+//        defaultEventHandler.setTaskRequestEventDispatcher(this.dispatcher);
+//
+//        compositeEventDispatcher.setTaskRequestEventHandler(defaultEventHandler);
+//        compositeEventDispatcher.setHunterEventHandler(defaultEventHandler);
+//
         if (networkStatusProvider.accessNetwork()) {
-            networkStatusProvider.register();
+            ((DefaultNetworkStatusProvider) networkStatusProvider).register();
         }
     }
 
@@ -176,7 +202,7 @@ public final class Sault {
     public void pause(Object tag) {
         SaultTask task = taskMap.get(tag);
         if (task != null) {
-            dispatcher.dispatchSaultTaskPauseRequest(task);
+            taskRequestEventDispatcher.dispatchSaultTaskPauseRequest(task);
         }
     }
 
@@ -189,7 +215,7 @@ public final class Sault {
     public void resume(Object tag) {
         SaultTask task = taskMap.get(tag);
         if (task != null) {
-            dispatcher.dispatchSaultTaskResumeRequest(task);
+            taskRequestEventDispatcher.dispatchSaultTaskResumeRequest(task);
         }
     }
 
@@ -200,12 +226,12 @@ public final class Sault {
     public void cancel(Object tag) {
         SaultTask task = taskMap.get(tag);
         if (task != null) {
-            dispatcher.dispatchSaultTaskCancelRequest(task);
+            taskRequestEventDispatcher.dispatchSaultTaskCancelRequest(task);
         }
     }
 
     public void close() {
-        SaultCache.release(this);
+        shutdown();
     }
 
     /**
@@ -213,7 +239,8 @@ public final class Sault {
      * release resources.
      */
     void shutdown() {
-        dispatcher.shutdown();
+        taskRequestEventDispatcher.shutdown();
+        ((DefaultNetworkStatusProvider) networkStatusProvider).unregister();
     }
 
 
@@ -232,28 +259,6 @@ public final class Sault {
 //        return stats;
         return null;
     }
-
-    private void cancelTask(SaultTask task) {
-        taskMap.remove(task.getTag());
-    }
-
-    private void resumeTask(SaultTask task) {
-        Callback callback = task.getCallback();
-        if (callback != null) {
-            callback.onEvent(task.getTag(), Callback.EVENT_RESUME);
-        }
-        enqueueAndSubmit(task);
-    }
-
-//    private void complete(TaskHunter hunter) {
-//        Task single = hunter.getTask();
-//        taskMap.remove(single.getTag());
-//        Callback callback = single.getCallback();
-//        if (callback != null) {
-//            callback.onEvent(single.getTag(), Callback.EVENT_COMPLETE);
-//            callback.onComplete(single.getTag(), single.getTarget().getAbsolutePath());
-//        }
-//    }
 
     private void submit(SaultTask task) {
         if (isLoggingEnabled())

@@ -10,6 +10,9 @@ import com.bestxty.sault.task.SaultTask;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 /**
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/12.
@@ -19,19 +22,21 @@ public abstract class AbstractTaskHunter implements TaskHunter {
 
     private final SaultTask task;
 
-    private final Downloader downloader;
+    @Inject
+    Downloader downloader;
 
-    private final int sequence;
+    @Inject
+    @Named("hunterSequence")
+    int sequence;
 
-    private final AtomicInteger retryCount;
+    @Inject
+    @Named("retryCount")
+    AtomicInteger retryCount;
 
     private Future<?> future;
 
-    public AbstractTaskHunter(SaultTask task, Downloader downloader) {
+    public AbstractTaskHunter(SaultTask task) {
         this.task = task;
-        this.downloader = downloader;
-        this.sequence = Utils.generateHunterSequence();
-        this.retryCount = new AtomicInteger(downloader.getRetryCount());
     }
 
     protected Downloader getDownloader() {

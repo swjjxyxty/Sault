@@ -32,35 +32,35 @@ public final class SaultConfiguration {
         autoAdjustThreadEnabled = builder.autoAdjustThreadEnabled;
     }
 
-    String getKey() {
+    public String getKey() {
         return key;
     }
 
-    File getSaveDir() {
+    public File getSaveDir() {
         return saveDir;
     }
 
-    ExecutorService getService() {
+    public ExecutorService getService() {
         return service;
     }
 
-    Downloader getDownloader() {
+    public Downloader getDownloader() {
         return downloader;
     }
 
-    Boolean isLoggingEnabled() {
+    public Boolean isLoggingEnabled() {
         return loggingEnabled;
     }
 
-    Boolean isBreakPointEnabled() {
+    public  Boolean isBreakPointEnabled() {
         return breakPointEnabled;
     }
 
-    Boolean isMultiThreadEnabled() {
+    public  Boolean isMultiThreadEnabled() {
         return multiThreadEnabled;
     }
 
-    Boolean isAutoAdjustThreadEnabled() {
+    public  Boolean isAutoAdjustThreadEnabled() {
         return autoAdjustThreadEnabled;
     }
 

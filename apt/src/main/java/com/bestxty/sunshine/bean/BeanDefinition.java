@@ -1,26 +1,37 @@
 package com.bestxty.sunshine.bean;
 
-import java.util.List;
-
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 /**
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/16.
  */
-@Singleton
-@Named
-
 public interface BeanDefinition {
 
-    String getId();
+    void setParentName(String parentName);
 
-    String getClassName();
+    String getParentName();
 
-    List<String> getParameterTypes();
+    void setBeanClassName(String beanClassName);
+
+    String getBeanClassName();
+
+    void setLazyInit(boolean lazyInit);
+
+    boolean isLazyInit();
+
+    void setDependsOn(String... dependsOn);
+
+    String[] getDependsOn();
+
+    void setFactoryBeanName(String factoryBeanName);
+
+    String getFactoryBeanName();
+
+    void setFactoryMethodName(String factoryMethodName);
+
+    String getFactoryMethodName();
+
+    void setSingleton(boolean singleton);
 
     boolean isSingleton();
 
-    boolean isLazy();
 }

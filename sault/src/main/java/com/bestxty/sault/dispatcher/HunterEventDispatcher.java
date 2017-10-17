@@ -7,7 +7,7 @@ import com.bestxty.sault.hunter.TaskHunter;
  *         Created by 姜泰阳 on 2017/10/12.
  */
 
-public interface HunterEventDispatcher {
+public interface HunterEventDispatcher extends EventDispatcher {
 
     void dispatchHunterStart(TaskHunter hunter);
 

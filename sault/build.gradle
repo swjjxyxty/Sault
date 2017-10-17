@@ -74,5 +74,10 @@ dependencies {
     testCompile 'org.powermock:powermock-module-junit4-rule:1.6.5'
     testCompile 'org.powermock:powermock-api-mockito:1.6.5'
     testCompile 'org.powermock:powermock-classloading-xstream:1.6.5'
-    compile project(':apt')
+    // https://mvnrepository.com/artifact/com.google.dagger/dagger
+    compile group: 'com.google.dagger', name: 'dagger', version: '2.12'
+
+    // https://mvnrepository.com/artifact/com.google.dagger/dagger-compiler
+    annotationProcessor  group: 'com.google.dagger', name: 'dagger-compiler', version: '2.12'
+
 }

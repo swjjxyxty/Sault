@@ -9,7 +9,5 @@ public interface SunshineContext {
 
     Object getBean(String id);
 
-    boolean beanIsExist(String id);
-
-    boolean isSingleton(String id);
+    void close();
 }

@@ -7,7 +7,7 @@ import com.bestxty.sault.task.SaultTask;
  *         Created by 姜泰阳 on 2017/10/12.
  */
 
-public interface SaultTaskEventDispatcher {
+public interface SaultTaskEventDispatcher extends EventDispatcher {
 
     void dispatchSaultTaskStart(SaultTask task);
 

@@ -2,11 +2,8 @@ package com.bestxty.sault.handler;
 
 import android.net.NetworkInfo;
 
-import com.bestxty.sault.Downloader;
 import com.bestxty.sault.NetworkStatusProvider;
-import com.bestxty.sault.dispatcher.HunterEventDispatcher;
 import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
-import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
 import com.bestxty.sault.hunter.DefaultSaultTaskHunter;
 import com.bestxty.sault.hunter.PartingSaultTaskHunter;
 import com.bestxty.sault.hunter.TaskHunter;
@@ -22,50 +19,36 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 /**
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/13.
  */
-
+@Singleton
 public class DefaultEventHandler implements TaskRequestEventHandler, HunterEventHandler {
 
     private final Map<Integer, TaskHunter> hunterMap = new ConcurrentHashMap<>();
     private final Map<String, List<SaultTask>> pausedTaskMap = new ConcurrentHashMap<>();
-    private ExecutorService executorService;
-    private Downloader downloader;
-    private TaskRequestEventDispatcher taskRequestEventDispatcher;
-    private SaultTaskEventDispatcher taskEventDispatcher;
-    private HunterEventDispatcher hunterEventDispatcher;
-    private NetworkStatusProvider networkStatusProvider;
+    private final ExecutorService executorService;
+    private final NetworkStatusProvider networkStatusProvider;
+    private final SaultTaskEventDispatcher taskEventDispatcher;
 
+    @Inject
     public DefaultEventHandler(ExecutorService executorService,
-                               Downloader downloader,
-                               NetworkStatusProvider networkStatusProvider) {
+                               NetworkStatusProvider networkStatusProvider,
+                               SaultTaskEventDispatcher taskEventDispatcher) {
         this.executorService = executorService;
-        this.downloader = downloader;
         this.networkStatusProvider = networkStatusProvider;
+        this.taskEventDispatcher = taskEventDispatcher;
     }
 
     private TaskHunter newTaskHunter(SaultTask task) {
         if (task instanceof PartedSaultTask) {
-            return new DefaultSaultTaskHunter(((PartedSaultTask) task),
-                    downloader, hunterEventDispatcher);
+            return new DefaultSaultTaskHunter(((PartedSaultTask) task));
         }
-        return new PartingSaultTaskHunter(task,
-                downloader, hunterEventDispatcher, taskEventDispatcher,
-                taskRequestEventDispatcher);
-    }
-
-    public void setTaskEventDispatcher(SaultTaskEventDispatcher taskEventDispatcher) {
-        this.taskEventDispatcher = taskEventDispatcher;
-    }
-
-    public void setTaskRequestEventDispatcher(TaskRequestEventDispatcher taskRequestEventDispatcher) {
-        this.taskRequestEventDispatcher = taskRequestEventDispatcher;
-    }
-
-    public void setHunterEventDispatcher(HunterEventDispatcher hunterEventDispatcher) {
-        this.hunterEventDispatcher = hunterEventDispatcher;
+        return new PartingSaultTaskHunter(task);
     }
 
     @Override

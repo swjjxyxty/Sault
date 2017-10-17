@@ -3,14 +3,16 @@ package com.bestxty.sault.hunter;
 import com.bestxty.sault.Downloader;
 import com.bestxty.sault.Downloader.ContentLengthException;
 import com.bestxty.sault.dispatcher.HunterEventDispatcher;
-import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
 import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
+import com.bestxty.sault.internal.di.components.DaggerHunterComponent;
 import com.bestxty.sault.task.PartedSaultTask;
 import com.bestxty.sault.task.SaultTask;
 
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import static com.bestxty.sault.Utils.closeQuietly;
 import static com.bestxty.sault.Utils.createTargetFile;
@@ -26,18 +28,18 @@ public class PartingSaultTaskHunter extends AbstractTaskHunter {
     private static final int LENGTH_PER_THREAD = 1024 * 1024 * 10;      //10M
 
     private Exception exception;
-    private HunterEventDispatcher eventDispatcher;
-    private SaultTaskEventDispatcher taskEventDispatcher;
-    private TaskRequestEventDispatcher taskRequestEventDispatcher;
+    @Inject
+    HunterEventDispatcher eventDispatcher;
 
-    public PartingSaultTaskHunter(SaultTask task, Downloader downloader,
-                                  HunterEventDispatcher eventDispatcher,
-                                  SaultTaskEventDispatcher taskEventDispatcher,
-                                  TaskRequestEventDispatcher taskRequestEventDispatcher) {
-        super(task, downloader);
-        this.eventDispatcher = eventDispatcher;
-        this.taskEventDispatcher = taskEventDispatcher;
-        this.taskRequestEventDispatcher = taskRequestEventDispatcher;
+    @Inject
+    TaskRequestEventDispatcher taskRequestEventDispatcher;
+
+    public PartingSaultTaskHunter(SaultTask task) {
+        super(task);
+        DaggerHunterComponent.builder()
+                .saultComponent(task.getSault().getSaultComponent())
+                .build()
+                .inject(this);
     }
 
     @Override
@@ -80,8 +82,7 @@ public class PartingSaultTaskHunter extends AbstractTaskHunter {
                 if (i == threadSize - 1) {
                     end = start + threadLength + remainder - 1;
                 }
-                partedTasks.add(new PartedSaultTask(task,
-                        taskEventDispatcher, start, end));
+                partedTasks.add(new PartedSaultTask(task, start, end));
             }
             for (SaultTask partedTask : partedTasks) {
                 taskRequestEventDispatcher.dispatchSaultTaskSubmitRequest(partedTask);

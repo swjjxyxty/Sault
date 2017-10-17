@@ -12,7 +12,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author 姜泰阳
@@ -38,8 +38,7 @@ public class PartedSaultTaskTest {
         PowerMockito.mockStatic(Utils.class);
         PowerMockito.when(Utils.generateTaskKey(saultTask))
                 .thenReturn("test-key");
-        PartedSaultTask task = new PartedSaultTask(saultTask, taskEventDispatcher,
-                1000, 10000);
+        PartedSaultTask task = new PartedSaultTask(saultTask, 1000, 10000);
         assertEquals(1000, task.getStartPosition());
         task.notifyFinishedSize(1000);
         assertEquals(2000, task.getStartPosition());
