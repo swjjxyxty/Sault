@@ -56,7 +56,7 @@ public class PartingSaultTaskHunter extends AbstractTaskHunter {
             Downloader downloader = getDownloader();
             long totalSize = downloader.fetchContentLength(task.getUri());
 
-            if (totalSize == 0) {
+            if (totalSize <= 0) {
                 throw new ContentLengthException("Received response with 0 content-length header.");
             }
 

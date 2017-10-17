@@ -124,40 +124,10 @@ public final class Sault {
                 .build();
         saultComponent.inject(this);
 
-//        this.saveDir = configuration.getSaveDir();
-//        this.loggingEnabled = configuration.isLoggingEnabled();
-//        this.breakPointEnabled = configuration.isBreakPointEnabled();
-//        this.multiThreadEnabled = configuration.isMultiThreadEnabled();
-//        this.key = configuration.getKey();
         taskMap = new LinkedHashMap<>();
-//        MainThreadHandler mainThreadHandler = new MainThreadHandler(Looper.getMainLooper());
-//        DefaultNetworkStatusProvider networkStatusProvider = new DefaultNetworkStatusProvider(context);
-//
-//        ExecutorService executorService = configuration.getService();
-//        Downloader downloader = configuration.getDownloader();
-//        DefaultEventHandler defaultEventHandler
-//                = new DefaultEventHandler(executorService, downloader, networkStatusProvider);
-//
-//        CompositeEventDispatcher compositeEventDispatcher
-//                = new CompositeEventDispatcher(mainThreadHandler);
-//
-//        this.taskRequestEventDispatcher = compositeEventDispatcher;
-//        this.dispatcher = compositeEventDispatcher;
-//
-//        defaultEventHandler.setHunterEventDispatcher(this.dispatcher);
-//        defaultEventHandler.setTaskEventDispatcher(this.dispatcher);
-//        defaultEventHandler.setTaskRequestEventDispatcher(this.dispatcher);
-//
-//        compositeEventDispatcher.setTaskRequestEventHandler(defaultEventHandler);
-//        compositeEventDispatcher.setHunterEventHandler(defaultEventHandler);
-//
         if (networkStatusProvider.accessNetwork()) {
             ((DefaultNetworkStatusProvider) networkStatusProvider).register();
         }
-    }
-
-    String getKey() {
-        return key;
     }
 
     public File getSaveDir() {

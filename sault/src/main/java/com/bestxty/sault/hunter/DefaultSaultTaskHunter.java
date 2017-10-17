@@ -63,7 +63,7 @@ public class DefaultSaultTaskHunter extends AbstractTaskHunter {
                 throw new ContentLengthException("Stream is null.");
             }
 
-            if (response.contentLength == 0) {
+            if (response.contentLength <= 0) {
                 closeQuietly(stream);
                 throw new ContentLengthException("Received response with 0 content-length header.");
             }

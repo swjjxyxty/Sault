@@ -40,14 +40,13 @@ class OkHttpDownloader implements Downloader {
     }
 
     private Response handleResponse(okhttp3.Response response) throws ResponseException {
+        ResponseBody body = response.body();
         if (!response.isSuccessful()) {
-            response.body().close();
+            if (body != null) body.close();
             throw new ResponseException(response.code() + " " + response.message(), response.code());
         }
 
-        ResponseBody body = response.body();
-
-        return new Response(body.byteStream(), body.contentLength());
+        return new Response(body == null ? null : body.byteStream(), body == null ? 0 : body.contentLength());
     }
 
 

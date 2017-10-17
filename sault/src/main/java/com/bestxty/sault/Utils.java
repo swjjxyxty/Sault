@@ -23,12 +23,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class Utils {
 
     private static final String TAG = "Sault";
-    public static final String THREAD_PREFIX = "Sault-";
+    private static final String THREAD_PREFIX = "Sault-";
     public static final String DISPATCHER_THREAD_NAME = THREAD_PREFIX + "Dispatcher";
     public static final String THREAD_IDLE_NAME = THREAD_PREFIX + "Idle";
 
 
-    public  static final int EOF = -1;
+    public static final int EOF = -1;
 
     public static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
     static final int DEFAULT_READ_TIMEOUT_MILLIS = 20 * 1000; // 20s
@@ -44,7 +44,7 @@ public final class Utils {
     }
 
 
-    public   static void closeQuietly(Closeable closeable) {
+    public static void closeQuietly(Closeable closeable) {
         try {
             if (closeable != null) {
                 closeable.close();
@@ -54,7 +54,7 @@ public final class Utils {
         }
     }
 
-    public  static void createTargetFile(File file) throws IOException {
+    public static void createTargetFile(File file) throws IOException {
         if (file.exists()) {
             if (file.isDirectory()) {
                 throw new IOException("File '" + file + "' exists but is a directory");

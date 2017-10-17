@@ -1,47 +1,85 @@
 package com.bestxty.sault.task;
 
+import com.bestxty.sault.ApplicationTestCase;
+import com.bestxty.sault.Sault;
 import com.bestxty.sault.Utils;
 import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
+import com.bestxty.sault.internal.di.components.DaggerSaultComponent;
+import com.bestxty.sault.internal.di.components.SaultComponent;
+import com.bestxty.sault.internal.di.modules.SaultModule;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.api.support.membermodification.MemberModifier;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.when;
 
 /**
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/13.
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(Utils.class)
-public class PartedSaultTaskTest {
-
+@PrepareForTest({Utils.class, Sault.class, SaultModule.class, PartedSaultTask.class})
+public class PartedSaultTaskTest extends ApplicationTestCase {
     @Mock
     private SaultTaskEventDispatcher taskEventDispatcher;
 
     @Mock
-    private SaultTask saultTask;
+    private SaultTask task;
+
+    private Sault sault;
+
+    private SaultModule saultModule;
+
+    private PartedSaultTask partedSaultTask;
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        super.setUp();
+        sault = PowerMockito.mock(Sault.class);
+        saultModule = PowerMockito.mock(SaultModule.class);
+        SaultComponent saultComponent = DaggerSaultComponent.builder()
+                .saultModule(saultModule)
+                .build();
+
+        when(task.getSault()).thenReturn(sault);
+        when(sault.getSaultComponent()).thenReturn(saultComponent);
+        PowerMockito.mockStatic(Utils.class);
+        PowerMockito.when(Utils.generateTaskKey(task)).thenReturn("test-key");
+        PowerMockito.when(Utils.generateTaskKey(partedSaultTask)).thenReturn("test-key");
+
+
+        partedSaultTask = new PartedSaultTask(task, 0, 1000);
+        MemberModifier.field(PartedSaultTask.class, "eventDispatcher")
+                .set(partedSaultTask, taskEventDispatcher);
+
     }
+
+    @Test
+    public void getProgress() throws Exception {
+        Exception exception = null;
+        try {
+            partedSaultTask.getProgress();
+        } catch (UnsupportedOperationException e) {
+            exception = e;
+        }
+        assertNotNull(exception);
+    }
+
 
     @Test
     public void getStartPosition() throws Exception {
         PowerMockito.mockStatic(Utils.class);
-        PowerMockito.when(Utils.generateTaskKey(saultTask))
+        PowerMockito.when(Utils.generateTaskKey(task))
                 .thenReturn("test-key");
-        PartedSaultTask task = new PartedSaultTask(saultTask, 1000, 10000);
-        assertEquals(1000, task.getStartPosition());
-        task.notifyFinishedSize(1000);
-        assertEquals(2000, task.getStartPosition());
+        assertEquals(0, partedSaultTask.getStartPosition());
+        partedSaultTask.notifyFinishedSize(1000);
+        assertEquals(1000, partedSaultTask.getStartPosition());
     }
 
 }

@@ -34,9 +34,9 @@ public class InternalEventDispatcherHandler extends Handler {
     private final HunterEventHandler hunterEventHandler;
 
     @Inject
-    InternalEventDispatcherHandler(@Named("internalLooper") Looper looper,
-                                   TaskRequestEventHandler taskRequestEventHandler,
-                                   HunterEventHandler hunterEventHandler) {
+    public InternalEventDispatcherHandler(@Named("internalLooper") Looper looper,
+                                          TaskRequestEventHandler taskRequestEventHandler,
+                                          HunterEventHandler hunterEventHandler) {
         super(looper);
         this.taskRequestEventHandler = taskRequestEventHandler;
         this.hunterEventHandler = hunterEventHandler;
