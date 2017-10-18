@@ -18,9 +18,9 @@ import javax.inject.Named;
  *         Created by 姜泰阳 on 2017/10/12.
  */
 
-public abstract class AbstractTaskHunter implements TaskHunter {
+abstract class AbstractTaskHunter implements TaskHunter {
 
-    protected static final String TAG = "TaskHunter";
+    static final String TAG = "TaskHunter";
 
     private final SaultTask task;
 
@@ -37,7 +37,7 @@ public abstract class AbstractTaskHunter implements TaskHunter {
 
     private Future<?> future;
 
-    public AbstractTaskHunter(SaultTask task) {
+    AbstractTaskHunter(SaultTask task) {
         this.task = task;
     }
 

@@ -3,14 +3,14 @@ package com.bestxty.sault.internal.task;
 import com.bestxty.sault.ApplicationTestCase;
 import com.bestxty.sault.Sault;
 import com.bestxty.sault.internal.Utils;
-import com.bestxty.sault.internal.dispatcher.SaultTaskEventDispatcher;
-import com.bestxty.sault.internal.di.components.DaggerSaultComponent;
 import com.bestxty.sault.internal.di.components.SaultComponent;
 import com.bestxty.sault.internal.di.modules.SaultModule;
+import com.bestxty.sault.internal.dispatcher.SaultTaskEventDispatcher;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.api.support.membermodification.MemberModifier;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -42,9 +42,8 @@ public class PartedSaultTaskTest extends ApplicationTestCase {
         super.setUp();
         sault = PowerMockito.mock(Sault.class);
         saultModule = PowerMockito.mock(SaultModule.class);
-        SaultComponent saultComponent = DaggerSaultComponent.builder()
-                .saultModule(saultModule)
-                .build();
+
+        SaultComponent saultComponent = Mockito.mock(SaultComponent.class);
 
         when(task.getSault()).thenReturn(sault);
         when(sault.getSaultComponent()).thenReturn(saultComponent);

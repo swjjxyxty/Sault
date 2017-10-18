@@ -1,9 +1,7 @@
 package com.bestxty.sault.internal.dispatcher;
 
 import com.bestxty.sault.ApplicationTestCase;
-import com.bestxty.sault.internal.dispatcher.DefaultHunterEventDispatcher;
-import com.bestxty.sault.internal.dispatcher.HunterEventDispatcher;
-import com.bestxty.sault.internal.dispatcher.TaskRequestEventDispatcher;
+import com.bestxty.sault.Sault;
 import com.bestxty.sault.internal.dispatcher.handler.InternalEventDispatcherHandler;
 import com.bestxty.sault.internal.handler.HunterEventHandler;
 import com.bestxty.sault.internal.handler.TaskRequestEventHandler;
@@ -13,16 +11,20 @@ import com.bestxty.sault.internal.task.SaultTask;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.robolectric.shadows.ShadowLooper;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/17.
  */
+@PrepareForTest(Sault.class)
 public class DefaultHunterEventDispatcherTest extends ApplicationTestCase {
 
     private HunterEventDispatcher hunterEventDispatcher;
@@ -41,9 +43,15 @@ public class DefaultHunterEventDispatcherTest extends ApplicationTestCase {
     @Mock
     private SaultTask task;
 
+
     @Before
     public void setUp() throws Exception {
         super.setUp();
+        Sault sault = PowerMockito.mock(Sault.class);
+
+        PowerMockito.when(sault.isLoggingEnabled()).thenReturn(false);
+        when(task.getSault()).thenReturn(sault);
+        when(taskHunter.getSault()).thenReturn(sault);
         InternalEventDispatcherHandler handler = new InternalEventDispatcherHandler(ShadowLooper.myLooper(),
                 taskRequestEventHandler, hunterEventHandler);
         hunterEventDispatcher = new DefaultHunterEventDispatcher(handler);

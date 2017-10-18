@@ -2,7 +2,6 @@ package com.bestxty.sault.internal.hunter;
 
 import com.bestxty.sault.Downloader;
 import com.bestxty.sault.Downloader.ContentLengthException;
-import com.bestxty.sault.internal.di.components.DaggerHunterComponent;
 import com.bestxty.sault.internal.di.modules.HunterModule;
 import com.bestxty.sault.internal.dispatcher.HunterEventDispatcher;
 import com.bestxty.sault.internal.dispatcher.TaskRequestEventDispatcher;
@@ -23,7 +22,7 @@ import static com.bestxty.sault.internal.Utils.createTargetFile;
  *         Created by 姜泰阳 on 2017/10/12.
  */
 
-public class PartingSaultTaskHunter extends AbstractTaskHunter {
+class PartingSaultTaskHunter extends AbstractTaskHunter {
 
 
     private static final int LENGTH_PER_THREAD = 1024 * 1024 * 10;      //10M
@@ -35,7 +34,7 @@ public class PartingSaultTaskHunter extends AbstractTaskHunter {
     @Inject
     TaskRequestEventDispatcher taskRequestEventDispatcher;
 
-    public PartingSaultTaskHunter(SaultTask task) {
+    PartingSaultTaskHunter(SaultTask task) {
         super(task);
         DaggerHunterComponent.builder()
                 .saultComponent(task.getSault().getSaultComponent())

@@ -2,7 +2,6 @@ package com.bestxty.sault.internal.dispatcher;
 
 import android.os.Handler;
 
-
 import com.bestxty.sault.internal.dispatcher.handler.InternalEventDispatcherHandler;
 import com.bestxty.sault.internal.hunter.TaskHunter;
 import com.bestxty.sault.internal.task.SaultTask;

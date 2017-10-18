@@ -8,8 +8,9 @@ import com.bestxty.sault.ApplicationTestCase;
 import com.bestxty.sault.NetworkStatusProvider;
 import com.bestxty.sault.internal.Utils;
 import com.bestxty.sault.internal.dispatcher.SaultTaskEventDispatcher;
-import com.bestxty.sault.internal.hunter.PartingSaultTaskHunter;
+import com.bestxty.sault.internal.hunter.MockPartingSaultTaskHunterProvider;
 import com.bestxty.sault.internal.hunter.TaskHunter;
+import com.bestxty.sault.internal.hunter.TaskHunterFactory;
 import com.bestxty.sault.internal.task.ExceptionSaultTask;
 import com.bestxty.sault.internal.task.SaultTask;
 
@@ -43,7 +44,7 @@ import static org.mockito.Mockito.when;
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/17.
  */
-@PrepareForTest({Utils.class, DefaultEventHandler.class})
+@PrepareForTest({Utils.class, DefaultEventHandler.class, TaskHunterFactory.class})
 public class DefaultEventHandlerTest extends ApplicationTestCase {
 
     private DefaultEventHandler defaultEventHandler;
@@ -69,6 +70,7 @@ public class DefaultEventHandlerTest extends ApplicationTestCase {
     @Mock
     private Exception exception;
 
+
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -78,8 +80,9 @@ public class DefaultEventHandlerTest extends ApplicationTestCase {
 
     @Test
     public void handleSaultTaskSubmitRequest() throws Exception {
-        PartingSaultTaskHunter taskHunter = Mockito.mock(PartingSaultTaskHunter.class);
-        PowerMockito.whenNew(PartingSaultTaskHunter.class).withArguments(task).thenReturn(taskHunter);
+        TaskHunter taskHunter = new MockPartingSaultTaskHunterProvider().mockPartingSaultTaskHunter();
+        PowerMockito.mockStatic(TaskHunterFactory.class);
+        PowerMockito.when(TaskHunterFactory.class, "newTaskHunter", task).thenReturn(taskHunter);
         when(executorService.submit(taskHunter)).thenReturn(future);
         defaultEventHandler.handleSaultTaskSubmitRequest(task);
         verify(executorService, times(1)).submit(taskHunter);
@@ -134,8 +137,10 @@ public class DefaultEventHandlerTest extends ApplicationTestCase {
         when(task.getKey()).thenReturn("test-key");
         when(pausedTaskMap.get("test-key")).thenReturn(Collections.singletonList(task));
 
-        PartingSaultTaskHunter taskHunter = Mockito.mock(PartingSaultTaskHunter.class);
-        PowerMockito.whenNew(PartingSaultTaskHunter.class).withArguments(task).thenReturn(taskHunter);
+        TaskHunter taskHunter = new MockPartingSaultTaskHunterProvider().mockPartingSaultTaskHunter();
+        PowerMockito.mockStatic(TaskHunterFactory.class);
+        PowerMockito.when(TaskHunterFactory.class, "newTaskHunter", task).thenReturn(taskHunter);
+
         when(executorService.submit(taskHunter)).thenReturn(future);
 //        defaultEventHandler.handleSaultTaskSubmitRequest(task);
         defaultEventHandler.handleSaultTaskResumeRequest(task);
@@ -269,7 +274,8 @@ public class DefaultEventHandlerTest extends ApplicationTestCase {
 
     @Test
     public void handleHunterFinishWithPartingSaultTaskHunter() throws Exception {
-        PartingSaultTaskHunter taskHunter = Mockito.mock(PartingSaultTaskHunter.class);
+        PowerMockito.mockStatic(TaskHunterFactory.class);
+        PowerMockito.when(TaskHunterFactory.class, "isPartingSaultTaskHunter", taskHunter).thenReturn(true);
         defaultEventHandler.handleHunterFinish(taskHunter);
         verify(taskHunter, never()).getTask();
     }

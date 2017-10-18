@@ -3,13 +3,15 @@ package com.bestxty.sault.internal.dispatcher.handler;
 import android.os.Handler;
 
 import com.bestxty.sault.ApplicationTestCase;
-import com.bestxty.sault.internal.dispatcher.handler.InternalMainThreadHandler;
+import com.bestxty.sault.Sault;
 import com.bestxty.sault.internal.handler.SaultTaskEventHandler;
 import com.bestxty.sault.internal.task.SaultTask;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.robolectric.shadows.ShadowLooper;
 
 import static com.bestxty.sault.internal.handler.SaultTaskEventHandler.SAULT_TASK_CANCEL;
@@ -22,11 +24,13 @@ import static com.bestxty.sault.internal.handler.SaultTaskEventHandler.SAULT_TAS
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/17.
  */
+@PrepareForTest(Sault.class)
 public class InternalMainThreadHandlerTest extends ApplicationTestCase {
     private Handler mainThreadHandler;
 
@@ -39,6 +43,10 @@ public class InternalMainThreadHandlerTest extends ApplicationTestCase {
     @Before
     public void setUp() throws Exception {
         super.setUp();
+        Sault sault = PowerMockito.mock(Sault.class);
+
+        PowerMockito.when(sault.isLoggingEnabled()).thenReturn(false);
+        when(task.getSault()).thenReturn(sault);
         mainThreadHandler = new InternalMainThreadHandler(ShadowLooper.getMainLooper(), taskEventHandler);
     }
 

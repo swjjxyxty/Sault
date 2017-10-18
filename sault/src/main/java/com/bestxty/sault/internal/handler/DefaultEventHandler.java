@@ -3,12 +3,10 @@ package com.bestxty.sault.internal.handler;
 import android.net.NetworkInfo;
 
 import com.bestxty.sault.NetworkStatusProvider;
-import com.bestxty.sault.internal.hunter.DefaultSaultTaskHunter;
-import com.bestxty.sault.internal.hunter.PartingSaultTaskHunter;
-import com.bestxty.sault.internal.hunter.TaskHunter;
 import com.bestxty.sault.internal.dispatcher.SaultTaskEventDispatcher;
+import com.bestxty.sault.internal.hunter.TaskHunter;
+import com.bestxty.sault.internal.hunter.TaskHunterFactory;
 import com.bestxty.sault.internal.task.ExceptionSaultTask;
-import com.bestxty.sault.internal.task.PartedSaultTask;
 import com.bestxty.sault.internal.task.SaultTask;
 
 import java.util.ArrayList;
@@ -43,16 +41,10 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
         this.taskEventDispatcher = taskEventDispatcher;
     }
 
-    private TaskHunter newTaskHunter(SaultTask task) {
-        if (task instanceof PartedSaultTask) {
-            return new DefaultSaultTaskHunter(((PartedSaultTask) task));
-        }
-        return new PartingSaultTaskHunter(task);
-    }
 
     @Override
     public void handleSaultTaskSubmitRequest(SaultTask task) {
-        TaskHunter hunter = newTaskHunter(task);
+        TaskHunter hunter = TaskHunterFactory.newTaskHunter(task);
         Future<?> future = executorService.submit(hunter);
         hunter.setFuture(future);
         hunterMap.put(hunter.getSequence(), hunter);
@@ -144,7 +136,7 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
 
     @Override
     public void handleHunterFinish(TaskHunter hunter) {
-        if (hunter instanceof PartingSaultTaskHunter) {
+        if (TaskHunterFactory.isPartingSaultTaskHunter(hunter)) {
             hunterMap.remove(hunter.getSequence());
             return;
         }

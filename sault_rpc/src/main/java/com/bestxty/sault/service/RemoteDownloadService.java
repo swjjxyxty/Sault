@@ -2,12 +2,9 @@ package com.bestxty.sault.service;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.Environment;
 import android.os.IBinder;
 
 import com.bestxty.sault.Sault;
-
-import java.io.File;
 
 /**
  * @author xty
@@ -22,11 +19,11 @@ public class RemoteDownloadService extends Service implements ServiceBridge {
     @Override
     public void onCreate() {
         super.onCreate();
-        sault = new Sault.SaultConfiguration(this)
-                .saveDir(Environment
-                        .getExternalStorageDirectory()
-                        .getAbsolutePath() + File.separator + "dl_test")
-                .build();
+//        sault = new Sault.SaultConfiguration(this)
+//                .saveDir(Environment
+//                        .getExternalStorageDirectory()
+//                        .getAbsolutePath() + File.separator + "dl_test")
+//                .build();
         binder = new DownloadBinder(this);
     }
 
@@ -34,7 +31,7 @@ public class RemoteDownloadService extends Service implements ServiceBridge {
     public void onDestroy() {
         super.onDestroy();
         if (sault != null) {
-            sault.shutdown();
+            sault.close();
         }
         binder = null;
     }

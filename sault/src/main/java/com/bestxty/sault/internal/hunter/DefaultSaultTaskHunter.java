@@ -4,7 +4,6 @@ import com.bestxty.sault.Downloader;
 import com.bestxty.sault.Downloader.ContentLengthException;
 import com.bestxty.sault.Downloader.Response;
 import com.bestxty.sault.Downloader.ResponseException;
-import com.bestxty.sault.internal.di.components.DaggerHunterComponent;
 import com.bestxty.sault.internal.di.modules.HunterModule;
 import com.bestxty.sault.internal.dispatcher.HunterEventDispatcher;
 import com.bestxty.sault.internal.task.PartedSaultTask;
@@ -27,14 +26,14 @@ import static com.bestxty.sault.internal.Utils.log;
  *         Created by 姜泰阳 on 2017/10/12.
  */
 
-public class DefaultSaultTaskHunter extends AbstractTaskHunter {
+class DefaultSaultTaskHunter extends AbstractTaskHunter {
 
     @Inject
     HunterEventDispatcher eventDispatcher;
 
     private Exception exception;
 
-    public DefaultSaultTaskHunter(PartedSaultTask task) {
+    DefaultSaultTaskHunter(PartedSaultTask task) {
         super(task);
         DaggerHunterComponent.builder()
                 .saultComponent(task.getSault().getSaultComponent())
@@ -59,7 +58,7 @@ public class DefaultSaultTaskHunter extends AbstractTaskHunter {
                     downloader.load(task.getUri(), startPosition, endPosition);
             InputStream stream = response.stream;
             if (stream == null) {
-                log(TAG,"stream is null");
+                log(TAG, "stream is null");
                 throw new ContentLengthException("Stream is null.");
             }
 

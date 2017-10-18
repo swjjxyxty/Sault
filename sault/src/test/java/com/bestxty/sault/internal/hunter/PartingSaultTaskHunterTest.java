@@ -6,21 +6,23 @@ import com.bestxty.sault.ApplicationTestCase;
 import com.bestxty.sault.Downloader;
 import com.bestxty.sault.Sault;
 import com.bestxty.sault.internal.Utils;
+import com.bestxty.sault.internal.di.components.SaultComponent;
+import com.bestxty.sault.internal.di.modules.HunterModule;
+import com.bestxty.sault.internal.di.modules.SaultModule;
 import com.bestxty.sault.internal.dispatcher.DefaultHunterEventDispatcher;
 import com.bestxty.sault.internal.dispatcher.HunterEventDispatcher;
 import com.bestxty.sault.internal.dispatcher.TaskRequestEventDispatcher;
-import com.bestxty.sault.internal.di.components.DaggerSaultComponent;
-import com.bestxty.sault.internal.di.components.SaultComponent;
-import com.bestxty.sault.internal.di.modules.SaultModule;
 import com.bestxty.sault.internal.task.PartedSaultTask;
 import com.bestxty.sault.internal.task.SaultTask;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.api.support.membermodification.MemberMatcher;
 import org.powermock.api.support.membermodification.MemberModifier;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.robolectric.RuntimeEnvironment;
@@ -45,7 +47,7 @@ import static org.mockito.Mockito.when;
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/17.
  */
-@PrepareForTest({Sault.class, SaultModule.class, Utils.class})
+@PrepareForTest({Sault.class, SaultModule.class, Utils.class, DaggerHunterComponent.class, DaggerHunterComponent.Builder.class})
 public class PartingSaultTaskHunterTest extends ApplicationTestCase {
 
     private PartingSaultTaskHunter taskHunter;
@@ -54,8 +56,6 @@ public class PartingSaultTaskHunterTest extends ApplicationTestCase {
     private SaultTask task;
 
     private Sault sault;
-
-    private SaultModule saultModule;
 
     @Mock
     private HunterEventDispatcher hunterEventDispatcher;
@@ -76,12 +76,25 @@ public class PartingSaultTaskHunterTest extends ApplicationTestCase {
     public void setUp() throws Exception {
         super.setUp();
         sault = PowerMockito.mock(Sault.class);
-        saultModule = PowerMockito.mock(SaultModule.class);
         when(task.getSault()).thenReturn(sault);
-        SaultComponent saultComponent = DaggerSaultComponent.builder()
-                .saultModule(saultModule)
-                .build();
+        SaultComponent saultComponent = Mockito.mock(SaultComponent.class);
         when(sault.getSaultComponent()).thenReturn(saultComponent);
+
+        DaggerHunterComponent hunterComponent = Mockito.mock(DaggerHunterComponent.class);
+        DaggerHunterComponent.Builder builder = Mockito.mock(DaggerHunterComponent.Builder.class);
+        PowerMockito.mockStatic(DaggerHunterComponent.class);
+
+        PowerMockito.when(DaggerHunterComponent.builder()).thenReturn(builder);
+        PowerMockito.when(builder, MemberMatcher.method(DaggerHunterComponent.Builder.class, "hunterModule", HunterModule.class))
+                .withArguments(Matchers.any())
+                .thenReturn(builder);
+        PowerMockito.when(builder, MemberMatcher.method(DaggerHunterComponent.Builder.class, "saultComponent", SaultComponent.class))
+                .withArguments(Matchers.any())
+                .thenReturn(builder);
+        PowerMockito.when(builder, MemberMatcher.method(DaggerHunterComponent.Builder.class, "build"))
+                .withNoArguments()
+                .thenReturn(hunterComponent);
+
 
         taskHunter = new PartingSaultTaskHunter(task);
         MemberModifier.field(PartingSaultTaskHunter.class, "eventDispatcher").set(taskHunter, hunterEventDispatcher);

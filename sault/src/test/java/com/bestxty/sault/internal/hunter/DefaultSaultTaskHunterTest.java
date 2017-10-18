@@ -6,6 +6,7 @@ import com.bestxty.sault.ApplicationTestCase;
 import com.bestxty.sault.Downloader;
 import com.bestxty.sault.Sault;
 import com.bestxty.sault.internal.Utils;
+import com.bestxty.sault.internal.di.modules.HunterModule;
 import com.bestxty.sault.internal.dispatcher.HunterEventDispatcher;
 import com.bestxty.sault.internal.di.components.DaggerSaultComponent;
 import com.bestxty.sault.internal.di.components.SaultComponent;
@@ -14,7 +15,9 @@ import com.bestxty.sault.internal.task.PartedSaultTask;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.api.support.membermodification.MemberMatcher;
 import org.powermock.api.support.membermodification.MemberModifier;
@@ -41,14 +44,14 @@ import static org.mockito.Mockito.when;
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/17.
  */
-@PrepareForTest({Utils.class, Sault.class, SaultModule.class, DefaultSaultTaskHunter.class})
+@PrepareForTest({Utils.class, Sault.class, SaultModule.class,
+        DefaultSaultTaskHunter.class, DaggerHunterComponent.class,
+        DaggerHunterComponent.Builder.class})
 public class DefaultSaultTaskHunterTest extends ApplicationTestCase {
 
     private DefaultSaultTaskHunter taskHunter;
 
     private Sault sault;
-
-    private SaultModule saultModule;
 
     @Mock
     private PartedSaultTask task;
@@ -72,12 +75,26 @@ public class DefaultSaultTaskHunterTest extends ApplicationTestCase {
     public void setUp() throws Exception {
         super.setUp();
         sault = PowerMockito.mock(Sault.class);
-        saultModule = PowerMockito.mock(SaultModule.class);
         when(task.getSault()).thenReturn(sault);
-        SaultComponent saultComponent = DaggerSaultComponent.builder()
-                .saultModule(saultModule)
-                .build();
+        SaultComponent saultComponent = Mockito.mock(SaultComponent.class);
         when(sault.getSaultComponent()).thenReturn(saultComponent);
+
+        DaggerHunterComponent hunterComponent = Mockito.mock(DaggerHunterComponent.class);
+        DaggerHunterComponent.Builder builder = Mockito.mock(DaggerHunterComponent.Builder.class);
+        PowerMockito.mockStatic(DaggerHunterComponent.class);
+
+        PowerMockito.when(DaggerHunterComponent.builder()).thenReturn(builder);
+        PowerMockito.when(builder, MemberMatcher.method(DaggerHunterComponent.Builder.class, "hunterModule", HunterModule.class))
+                .withArguments(Matchers.any())
+                .thenReturn(builder);
+        PowerMockito.when(builder, MemberMatcher.method(DaggerHunterComponent.Builder.class, "saultComponent", SaultComponent.class))
+                .withArguments(Matchers.any())
+                .thenReturn(builder);
+        PowerMockito.when(builder, MemberMatcher.method(DaggerHunterComponent.Builder.class, "build"))
+                .withNoArguments()
+                .thenReturn(hunterComponent);
+
+
         taskHunter = new DefaultSaultTaskHunter(task);
 
         inputStream = new ByteArrayInputStream("test".getBytes());

@@ -55,15 +55,15 @@ public final class SaultConfiguration {
         return loggingEnabled;
     }
 
-    public  Boolean isBreakPointEnabled() {
+    public Boolean isBreakPointEnabled() {
         return breakPointEnabled;
     }
 
-    public  Boolean isMultiThreadEnabled() {
+    public Boolean isMultiThreadEnabled() {
         return multiThreadEnabled;
     }
 
-    public  Boolean isAutoAdjustThreadEnabled() {
+    public Boolean isAutoAdjustThreadEnabled() {
         return autoAdjustThreadEnabled;
     }
 

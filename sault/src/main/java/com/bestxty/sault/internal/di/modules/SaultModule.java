@@ -3,10 +3,10 @@ package com.bestxty.sault.internal.di.modules;
 import android.content.Context;
 import android.os.Looper;
 
-import com.bestxty.sault.internal.DefaultNetworkStatusProvider;
 import com.bestxty.sault.Downloader;
 import com.bestxty.sault.NetworkStatusProvider;
 import com.bestxty.sault.SaultConfiguration;
+import com.bestxty.sault.internal.DefaultNetworkStatusProvider;
 import com.bestxty.sault.internal.dispatcher.DefaultHunterEventDispatcher;
 import com.bestxty.sault.internal.dispatcher.DefaultSaultTaskEventDispatcher;
 import com.bestxty.sault.internal.dispatcher.DispatcherThread;
@@ -51,11 +51,13 @@ public class SaultModule {
     }
 
     @Provides
+    @Singleton
     ExecutorService provideExecutorService() {
         return configuration.getService();
     }
 
     @Provides
+    @Singleton
     Downloader provideDownloader() {
         return configuration.getDownloader();
     }
@@ -67,30 +69,35 @@ public class SaultModule {
     }
 
     @Provides
+    @Singleton
     File provideSaveDir() {
         return configuration.getSaveDir();
     }
 
     @Provides
     @Named("saultKey")
+    @Singleton
     String provideSaultKey() {
         return configuration.getKey();
     }
 
     @Provides
     @Named("loggingEnabled")
+    @Singleton
     Boolean provideLoggingEnabled() {
         return configuration.isLoggingEnabled();
     }
 
     @Provides
     @Named("breakPointEnabled")
+    @Singleton
     Boolean provideBreakPointEnabled() {
         return configuration.isBreakPointEnabled();
     }
 
     @Provides
     @Named("multiThreadEnabled")
+    @Singleton
     Boolean provideMultiThreadEnabled() {
         return configuration.isMultiThreadEnabled();
     }
@@ -103,12 +110,14 @@ public class SaultModule {
 
 
     @Provides
+    @Singleton
     @Named("mainLooper")
     Looper provideMainLooper() {
         return Looper.getMainLooper();
     }
 
     @Provides
+    @Singleton
     @Named("internalLooper")
     Looper provideInternalLooper(DispatcherThread dispatcherThread) {
         dispatcherThread.start();

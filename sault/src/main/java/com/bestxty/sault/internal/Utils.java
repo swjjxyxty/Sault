@@ -7,7 +7,6 @@ import android.os.Process;
 import android.provider.Settings;
 import android.util.Log;
 
-
 import com.bestxty.sault.internal.task.SaultTask;
 
 import java.io.Closeable;
