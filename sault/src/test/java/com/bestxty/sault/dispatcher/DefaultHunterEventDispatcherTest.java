@@ -31,8 +31,6 @@ public class DefaultHunterEventDispatcherTest extends ApplicationTestCase {
 
     @Mock
     private HunterEventHandler hunterEventHandler;
-    @Mock
-    private DispatcherThread dispatcherThread;
 
     @Mock
     private TaskHunter taskHunter;
@@ -45,8 +43,8 @@ public class DefaultHunterEventDispatcherTest extends ApplicationTestCase {
         super.setUp();
         InternalEventDispatcherHandler handler = new InternalEventDispatcherHandler(ShadowLooper.myLooper(),
                 taskRequestEventHandler, hunterEventHandler);
-        hunterEventDispatcher = new DefaultHunterEventDispatcher(dispatcherThread, handler);
-        taskRequestEventDispatcher = new DefaultHunterEventDispatcher(dispatcherThread, handler);
+        hunterEventDispatcher = new DefaultHunterEventDispatcher(handler);
+        taskRequestEventDispatcher = new DefaultHunterEventDispatcher(handler);
     }
 
     @Test
@@ -117,10 +115,5 @@ public class DefaultHunterEventDispatcherTest extends ApplicationTestCase {
         verifyNoMoreInteractions(taskRequestEventHandler);
     }
 
-    @Test
-    public void shutdown() throws Exception {
-        taskRequestEventDispatcher.shutdown();
-        verify(dispatcherThread, times(1)).quit();
-    }
 
 }

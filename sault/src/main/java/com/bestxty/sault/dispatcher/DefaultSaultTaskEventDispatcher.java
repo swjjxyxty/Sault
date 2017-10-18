@@ -31,7 +31,8 @@ public class DefaultSaultTaskEventDispatcher implements SaultTaskEventDispatcher
 
     @Override
     public void shutdown() {
-        mainThreadHandler.removeCallbacksAndMessages(null);
+        if (mainThreadHandler != null)
+            mainThreadHandler.removeCallbacksAndMessages(null);
     }
 
     @Override

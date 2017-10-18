@@ -20,6 +20,8 @@ import javax.inject.Named;
 
 public abstract class AbstractTaskHunter implements TaskHunter {
 
+    protected static final String TAG = "TaskHunter";
+
     private final SaultTask task;
 
     @Inject

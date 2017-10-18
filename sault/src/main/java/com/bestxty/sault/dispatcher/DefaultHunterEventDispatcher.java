@@ -9,6 +9,7 @@ import com.bestxty.sault.task.SaultTask;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import static com.bestxty.sault.Utils.log;
 import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_EXCEPTION;
 import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_FAILED;
 import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_FINISH;
@@ -26,13 +27,12 @@ import static com.bestxty.sault.handler.TaskRequestEventHandler.TASK_SUBMIT_REQU
 @Singleton
 public class DefaultHunterEventDispatcher implements HunterEventDispatcher, TaskRequestEventDispatcher {
 
+    private static final String TAG = "DefaultHunterEventDispatcher";
+
     private final Handler hunterHandler;
-    private final DispatcherThread dispatcherThread;
 
     @Inject
-    DefaultHunterEventDispatcher(DispatcherThread dispatcherThread,
-                                 InternalEventDispatcherHandler internalEventDispatcherHandler) {
-        this.dispatcherThread = dispatcherThread;
+    DefaultHunterEventDispatcher(InternalEventDispatcherHandler internalEventDispatcherHandler) {
         hunterHandler = internalEventDispatcherHandler;
     }
 
@@ -85,7 +85,14 @@ public class DefaultHunterEventDispatcher implements HunterEventDispatcher, Task
 
     @Override
     public void shutdown() {
+        if (hunterHandler == null) {
+            return;
+        }
         hunterHandler.removeCallbacksAndMessages(null);
-        dispatcherThread.quit();
+        if (hunterHandler.getLooper() != null) {
+            log(TAG, "internal event dispatcher looper is null.");
+            return;
+        }
+        hunterHandler.getLooper().quit();
     }
 }

@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import static com.bestxty.sault.Utils.log;
 import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_CANCEL;
 import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_COMPLETE;
 import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_EXCEPTION;
@@ -26,18 +27,26 @@ import static com.bestxty.sault.handler.SaultTaskEventHandler.SAULT_TASK_START;
 @Singleton
 public class InternalMainThreadHandler extends Handler {
 
+    private static final String TAG = "InternalMainThreadHandler";
 
     private final SaultTaskEventHandler saultTaskEventHandler;
+
+    private final LoggingEnableResovler loggingEnableResovler;
 
     @Inject
     public InternalMainThreadHandler(@Named("mainLooper") Looper looper,
                                      SaultTaskEventHandler saultTaskEventHandler) {
         super(looper);
         this.saultTaskEventHandler = saultTaskEventHandler;
+        this.loggingEnableResovler = new LoggingEnableResovler();
     }
+
 
     @Override
     public void handleMessage(Message msg) {
+        if (loggingEnableResovler.isLoggingEnabled(msg.obj)) {
+            log(TAG, "dispatch task event, event = " + msg.what);
+        }
         switch (msg.what) {
             case SAULT_TASK_START:
                 saultTaskEventHandler.handleSaultTaskStart(((SaultTask) msg.obj));

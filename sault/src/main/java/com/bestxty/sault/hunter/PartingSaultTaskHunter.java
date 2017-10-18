@@ -5,6 +5,7 @@ import com.bestxty.sault.Downloader.ContentLengthException;
 import com.bestxty.sault.dispatcher.HunterEventDispatcher;
 import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
 import com.bestxty.sault.internal.di.components.DaggerHunterComponent;
+import com.bestxty.sault.internal.di.modules.HunterModule;
 import com.bestxty.sault.task.PartedSaultTask;
 import com.bestxty.sault.task.SaultTask;
 
@@ -38,6 +39,7 @@ public class PartingSaultTaskHunter extends AbstractTaskHunter {
         super(task);
         DaggerHunterComponent.builder()
                 .saultComponent(task.getSault().getSaultComponent())
+                .hunterModule(new HunterModule())
                 .build()
                 .inject(this);
     }

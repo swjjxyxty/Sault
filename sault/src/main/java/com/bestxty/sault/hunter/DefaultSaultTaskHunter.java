@@ -59,7 +59,7 @@ public class DefaultSaultTaskHunter extends AbstractTaskHunter {
                     downloader.load(task.getUri(), startPosition, endPosition);
             InputStream stream = response.stream;
             if (stream == null) {
-                log("stream is null");
+                log(TAG,"stream is null");
                 throw new ContentLengthException("Stream is null.");
             }
 

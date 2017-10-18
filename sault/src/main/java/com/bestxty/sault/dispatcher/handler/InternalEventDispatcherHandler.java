@@ -9,10 +9,13 @@ import com.bestxty.sault.handler.TaskRequestEventHandler;
 import com.bestxty.sault.hunter.TaskHunter;
 import com.bestxty.sault.task.SaultTask;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import static com.bestxty.sault.Utils.log;
 import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_EXCEPTION;
 import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_FAILED;
 import static com.bestxty.sault.handler.HunterEventHandler.HUNTER_FINISH;
@@ -30,8 +33,11 @@ import static com.bestxty.sault.handler.TaskRequestEventHandler.TASK_SUBMIT_REQU
 @Singleton
 public class InternalEventDispatcherHandler extends Handler {
 
+    private static final String TAG = "InternalEventDispatcherHandler";
+
     private final TaskRequestEventHandler taskRequestEventHandler;
     private final HunterEventHandler hunterEventHandler;
+    private final LoggingEnableResovler loggingEnableResovler;
 
     @Inject
     public InternalEventDispatcherHandler(@Named("internalLooper") Looper looper,
@@ -40,10 +46,14 @@ public class InternalEventDispatcherHandler extends Handler {
         super(looper);
         this.taskRequestEventHandler = taskRequestEventHandler;
         this.hunterEventHandler = hunterEventHandler;
+        this.loggingEnableResovler = new LoggingEnableResovler();
     }
 
     @Override
     public void handleMessage(Message msg) {
+        if (loggingEnableResovler.isLoggingEnabled(msg.obj)) {
+            log(TAG, "dispatch internal event, event = " + msg.what);
+        }
         switch (msg.what) {
             case TASK_SUBMIT_REQUEST:
                 taskRequestEventHandler.handleSaultTaskSubmitRequest(((SaultTask) msg.obj));

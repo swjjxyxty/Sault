@@ -1,6 +1,7 @@
 package com.bestxty.sault.internal.di.modules;
 
 import com.bestxty.sault.Utils;
+import com.bestxty.sault.internal.di.PerTask;
 
 import javax.inject.Named;
 
@@ -11,17 +12,12 @@ import dagger.Provides;
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/17.
  */
-@Module(includes = SaultModule.class)
+@Module
 public class HunterModule {
-
-//    private final SaultTask task;
-//
-//    public HunterModule(SaultTask task) {
-//        this.task = task;
-//    }
 
     @Provides
     @Named("hunterSequence")
+    @PerTask
     Integer provideHunterSequence() {
         return Utils.generateHunterSequence();
     }

@@ -25,6 +25,7 @@ import static com.bestxty.sault.Utils.log;
  *         Created by xty on 2016/12/9.
  */
 public final class Sault {
+    private static final String TAG = "Sault";
 
     private static SaultConfiguration DEFAULT_CONFIGURATION;
 
@@ -38,6 +39,9 @@ public final class Sault {
             throw new IllegalArgumentException("A non-null SaultConfiguration must be provided");
         }
         DEFAULT_CONFIGURATION = configuration;
+        if (configuration.isLoggingEnabled()) {
+            log(TAG, "set default configuration,key = " + configuration.getKey());
+        }
     }
 
 
@@ -47,7 +51,13 @@ public final class Sault {
         }
         Sault sault = SaultHolder.INSTANCE.getSault();
         if (sault == null) {
+            if (DEFAULT_CONFIGURATION.isLoggingEnabled()) {
+                log(TAG, "new sault with default configuration.");
+            }
             return SaultHolder.INSTANCE.newSault(DEFAULT_CONFIGURATION, context);
+        }
+        if (sault.isShutdown()) {
+            throw new IllegalStateException("sault already shutdown.");
         }
         return sault;
     }
@@ -112,6 +122,8 @@ public final class Sault {
     @Inject
     NetworkStatusProvider networkStatusProvider;
 
+    private volatile boolean shutdown = false;
+
     private SaultComponent saultComponent;
 
     public SaultComponent getSaultComponent() {
@@ -159,8 +171,14 @@ public final class Sault {
         return multiThreadEnabled;
     }
 
+    public boolean isShutdown() {
+        return shutdown;
+    }
 
     public TaskBuilder load(String url) {
+        if (isLoggingEnabled()) {
+            log(TAG, "new task builder with url = " + url);
+        }
         return new TaskBuilder(this, Uri.parse(url));
     }
 
@@ -173,6 +191,10 @@ public final class Sault {
         SaultTask task = taskMap.get(tag);
         if (task != null) {
             taskRequestEventDispatcher.dispatchSaultTaskPauseRequest(task);
+            return;
+        }
+        if (isLoggingEnabled()) {
+            log(TAG, "pause task cancel, task not exists. tag = " + tag.toString());
         }
     }
 
@@ -186,6 +208,10 @@ public final class Sault {
         SaultTask task = taskMap.get(tag);
         if (task != null) {
             taskRequestEventDispatcher.dispatchSaultTaskResumeRequest(task);
+            return;
+        }
+        if (isLoggingEnabled()) {
+            log(TAG, "resume task cancel, task not exists. tag = " + tag.toString());
         }
     }
 
@@ -197,6 +223,10 @@ public final class Sault {
         SaultTask task = taskMap.get(tag);
         if (task != null) {
             taskRequestEventDispatcher.dispatchSaultTaskCancelRequest(task);
+            return;
+        }
+        if (isLoggingEnabled()) {
+            log(TAG, "cancel task cancel, task not exists. tag = " + tag.toString());
         }
     }
 
@@ -209,8 +239,19 @@ public final class Sault {
      * release resources.
      */
     void shutdown() {
+        if (shutdown) {
+            if (isLoggingEnabled()) {
+                log(TAG, "sault instance already shutdown.");
+            }
+            return;
+        }
+        if (isLoggingEnabled()) {
+            log(TAG, "shutdown sault instance.");
+        }
         taskRequestEventDispatcher.shutdown();
         ((DefaultNetworkStatusProvider) networkStatusProvider).unregister();
+        taskMap.clear();
+        shutdown = true;
     }
 
 
@@ -232,7 +273,7 @@ public final class Sault {
 
     private void submit(SaultTask task) {
         if (isLoggingEnabled())
-            log("submit task. task=" + task.getKey());
+            log(TAG, "submit task. task=" + task.getKey());
         taskRequestEventDispatcher.dispatchSaultTaskSubmitRequest(task);
     }
 

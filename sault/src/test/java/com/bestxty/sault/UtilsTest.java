@@ -21,15 +21,6 @@ import static org.mockito.Mockito.verify;
 
 public class UtilsTest extends ApplicationTestCase {
 
-    @Test
-    public void log() throws Exception {
-        Utils.log("log test");
-    }
-
-    @Test
-    public void log1() throws Exception {
-        Utils.log("error test", new RuntimeException("ex"));
-    }
 
     @Test
     public void closeQuietly() throws Exception {

@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class Utils {
 
-    private static final String TAG = "Sault";
     private static final String THREAD_PREFIX = "Sault-";
     public static final String DISPATCHER_THREAD_NAME = THREAD_PREFIX + "Dispatcher";
     public static final String THREAD_IDLE_NAME = THREAD_PREFIX + "Idle";
@@ -35,12 +34,12 @@ public final class Utils {
     static final int DEFAULT_WRITE_TIMEOUT_MILLIS = 20 * 1000; // 20s
     static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 15 * 1000; // 15s
 
-    public static void log(String msg) {
-        Log.d(TAG, msg);
+    public static void log(String tag, String msg) {
+        Log.d(tag, msg);
     }
 
-    public static void log(String msg, Throwable throwable) {
-        Log.e(TAG, msg, throwable);
+    public static void log(String tag, String msg, Throwable throwable) {
+        Log.e(tag, msg, throwable);
     }
 
 
