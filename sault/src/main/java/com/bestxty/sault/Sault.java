@@ -4,11 +4,12 @@ package com.bestxty.sault;
 import android.content.Context;
 import android.net.Uri;
 
-import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
+import com.bestxty.sault.internal.DefaultNetworkStatusProvider;
 import com.bestxty.sault.internal.di.components.DaggerSaultComponent;
 import com.bestxty.sault.internal.di.components.SaultComponent;
 import com.bestxty.sault.internal.di.modules.SaultModule;
-import com.bestxty.sault.task.SaultTask;
+import com.bestxty.sault.internal.dispatcher.TaskRequestEventDispatcher;
+import com.bestxty.sault.internal.task.SaultTask;
 import com.bestxty.sault.task.TaskBuilder;
 
 import java.io.File;
@@ -18,7 +19,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import static com.bestxty.sault.Utils.log;
+import static com.bestxty.sault.internal.Utils.log;
 
 /**
  * @author xty
@@ -120,7 +121,7 @@ public final class Sault {
     boolean multiThreadEnabled;
 
     @Inject
-    NetworkStatusProvider networkStatusProvider;
+    com.bestxty.sault.NetworkStatusProvider networkStatusProvider;
 
     private volatile boolean shutdown = false;
 

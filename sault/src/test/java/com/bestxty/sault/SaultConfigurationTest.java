@@ -1,5 +1,8 @@
 package com.bestxty.sault;
 
+import com.bestxty.sault.internal.OkHttpDownloader;
+import com.bestxty.sault.internal.SaultExecutorService;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 

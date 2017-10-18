@@ -1,6 +1,6 @@
 package com.bestxty.sault.internal.di.modules;
 
-import com.bestxty.sault.Utils;
+import com.bestxty.sault.internal.Utils;
 import com.bestxty.sault.internal.di.PerTask;
 
 import javax.inject.Named;

@@ -1,7 +1,7 @@
 package com.bestxty.sault.internal.di.components;
 
-import com.bestxty.sault.hunter.DefaultSaultTaskHunter;
-import com.bestxty.sault.hunter.PartingSaultTaskHunter;
+import com.bestxty.sault.internal.hunter.DefaultSaultTaskHunter;
+import com.bestxty.sault.internal.hunter.PartingSaultTaskHunter;
 import com.bestxty.sault.internal.di.PerTask;
 import com.bestxty.sault.internal.di.modules.HunterModule;
 

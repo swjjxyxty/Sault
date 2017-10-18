@@ -2,12 +2,11 @@ package com.bestxty.sault.internal.di.components;
 
 import com.bestxty.sault.Downloader;
 import com.bestxty.sault.Sault;
-import com.bestxty.sault.dispatcher.HunterEventDispatcher;
-import com.bestxty.sault.dispatcher.SaultTaskEventDispatcher;
-import com.bestxty.sault.dispatcher.TaskRequestEventDispatcher;
+import com.bestxty.sault.internal.dispatcher.HunterEventDispatcher;
+import com.bestxty.sault.internal.dispatcher.SaultTaskEventDispatcher;
+import com.bestxty.sault.internal.dispatcher.TaskRequestEventDispatcher;
 import com.bestxty.sault.internal.di.modules.SaultModule;
-import com.bestxty.sault.task.PartedSaultTask;
-import com.bestxty.sault.task.SaultTask;
+import com.bestxty.sault.internal.task.PartedSaultTask;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

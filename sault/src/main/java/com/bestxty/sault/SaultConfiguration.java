@@ -1,5 +1,8 @@
 package com.bestxty.sault;
 
+import com.bestxty.sault.internal.OkHttpDownloader;
+import com.bestxty.sault.internal.SaultExecutorService;
+
 import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
