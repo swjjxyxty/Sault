@@ -1,1 +1,1 @@
-include ':app', ':sault-android', ':sault_rpc', ':sault-api', ':sault-java'
+include ':app', ':sault', ':sault_rpc'
