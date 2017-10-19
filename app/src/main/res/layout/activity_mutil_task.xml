@@ -4,10 +4,13 @@
     android:id="@+id/activity_mutil_task"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context="com.bestxty.sault.demo.MutilTaskActivity">
 
     <ListView
         android:id="@+id/listview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:scrollbars="none"
+        android:headerDividersEnabled="true"
+        android:layout_height="wrap_content" />
 </RelativeLayout>

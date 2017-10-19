@@ -19,8 +19,6 @@ import com.bestxty.sault.demo.bean.Task;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.logging.HttpLoggingInterceptor;
-
 import static com.bestxty.sault.Sault.calculateProgress;
 import static com.bestxty.sault.demo.adapter.TaskAdapter.TaskViewHolder;
 
@@ -31,6 +29,7 @@ public class MutilTaskActivity extends AppCompatActivity {
     private ListView listView;
 
     private TaskAdapter adapter;
+
     private List<Task> taskList;
 
     private Sault sault;
@@ -40,9 +39,6 @@ public class MutilTaskActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mutil_task);
         listView = (ListView) findViewById(R.id.listview);
-
-        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.HEADERS);
 
         sault = Sault.getInstance(this);
 

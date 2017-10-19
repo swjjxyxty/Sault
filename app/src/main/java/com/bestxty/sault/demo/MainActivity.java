@@ -5,21 +5,22 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import com.bestxty.sault.Sault;
+
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        findViewById(R.id.btn_single_task).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.text_single).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(MainActivity.this, SingleTaskActivity.class));
             }
         });
-        findViewById(R.id.btn_mutil_task).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.text_multi).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(MainActivity.this, MutilTaskActivity.class));
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Sault.getInstance(this).close();
         DownloadApplication.getRefWatcher(this)
                 .watch(this);
 

@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">DownloadLibrary</string>
+    <string name="app_name">Fast\'Sault</string>
+    <string name="single_task">Single Task</string>
+    <string name="multi_task">Multi Task</string>
+    <string name="progress_tip" formatted="false">finish:%d of total:%d</string>
+    <string name="btn_start_name">Start</string>
+    <string name="btn_pause_name">Pause</string>
+    <string name="btn_resume_name">Resume</string>
+    <string name="btn_cancel_name">Cancel</string>
 </resources>

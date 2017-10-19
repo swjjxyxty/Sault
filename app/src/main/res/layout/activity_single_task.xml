@@ -1,57 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_single_task"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
+    android:padding="8dp"
     tools:context="com.bestxty.sault.demo.SingleTaskActivity">
 
 
     <TextView
         android:id="@+id/text_title"
-        android:text="SingleTaskTest"
-        android:layout_marginTop="16dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/primaryText"
+        android:gravity="center"
+        android:text="@string/single_task"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/text_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/text_title"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:textColor="@color/secondText"
+        tools:text="Ready" />
 
     <ProgressBar
         android:id="@+id/pb_progress"
-        android:layout_width="match_parent"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
         android:layout_height="16dp"
-        android:layout_margin="8dp"
-        android:layout_below="@id/text_title"/>
+        android:layout_below="@id/text_status"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/text_progress_tip"
+        android:layout_below="@id/pb_progress"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:textColor="@color/secondText"
+        tools:text="finish:800 of total:1000" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_below="@id/pb_progress"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="16dp"
+        android:gravity="bottom"
         android:orientation="vertical">
 
         <Button
             android:id="@+id/btn_start"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Start"/>
+            android:background="@drawable/btn_background_selector"
+            android:text="@string/btn_start_name"
+            android:textColor="@android:color/white" />
 
         <Button
             android:id="@+id/btn_pause"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Pause"/>
+            android:layout_marginTop="8dp"
+            android:background="@drawable/btn_background_selector"
+            android:text="@string/btn_pause_name"
+            android:textColor="@android:color/white" />
 
         <Button
             android:id="@+id/btn_resume"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Resume"/>
+            android:layout_marginTop="8dp"
+            android:background="@drawable/btn_background_selector"
+            android:text="@string/btn_resume_name"
+            android:textColor="@android:color/white" />
 
         <Button
             android:id="@+id/btn_cancel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Cancel"/>
+            android:layout_marginTop="8dp"
+            android:background="@drawable/btn_background_selector"
+            android:text="@string/btn_cancel_name"
+            android:textColor="@android:color/white" />
     </LinearLayout>
 </RelativeLayout>

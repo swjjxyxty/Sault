@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:descendantFocusability="blocksDescendants"
-                android:padding="8dp">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants"
+    android:padding="8dp">
 
 
     <Button
         android:id="@+id/btn_task"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
+        android:layout_centerVertical="true"
+        android:background="@drawable/btn_background_selector"
         android:layout_alignParentRight="true"
         android:layout_marginLeft="8dp"
-        android:text="Start"
-        android:textAllCaps="false"/>
+        tools:text="Start"
+        android:textAllCaps="false" />
 
 
     <RelativeLayout
@@ -26,16 +28,18 @@
             android:id="@+id/text_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@color/primaryText"
             android:textSize="18sp"
-            tools:text="xxxxx.mp4"/>
+            tools:text="demo.mp4" />
 
         <TextView
             android:id="@+id/text_desc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@color/secondText"
             android:layout_below="@id/text_title"
             android:textSize="16sp"
-            tools:text="desc,descdescdescdescdescdescdes"/>
+            tools:text="simple mp4 video." />
 
         <ProgressBar
             android:id="@id/pb_progress"
@@ -44,7 +48,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/text_title"
             android:visibility="gone"
-            tools:progress="50"/>
+            tools:progress="50" />
 
 
     </RelativeLayout>
