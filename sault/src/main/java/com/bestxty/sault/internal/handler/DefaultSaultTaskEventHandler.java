@@ -12,10 +12,10 @@ import javax.inject.Singleton;
  *         Created by 姜泰阳 on 2017/10/17.
  */
 @Singleton
-public class DefaultSaultTaskEventHandler implements SaultTaskEventHandler {
+class DefaultSaultTaskEventHandler implements SaultTaskEventHandler {
 
     @Inject
-    public DefaultSaultTaskEventHandler() {
+    DefaultSaultTaskEventHandler() {
     }
 
     @Override

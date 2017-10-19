@@ -10,7 +10,6 @@ import com.bestxty.sault.internal.di.components.SaultComponent;
 import com.bestxty.sault.internal.di.modules.SaultModule;
 import com.bestxty.sault.internal.dispatcher.TaskRequestEventDispatcher;
 import com.bestxty.sault.internal.task.SaultTask;
-import com.bestxty.sault.task.TaskBuilder;
 
 import java.io.File;
 import java.util.LinkedHashMap;

@@ -11,7 +11,7 @@ import static com.bestxty.sault.internal.Utils.DISPATCHER_THREAD_NAME;
  * @author 姜泰阳
  *         Created by 姜泰阳 on 2017/10/17.
  */
-public class DispatcherThread extends HandlerThread {
+class DispatcherThread extends HandlerThread {
     @Inject
     DispatcherThread() {
         super(DISPATCHER_THREAD_NAME, THREAD_PRIORITY_BACKGROUND);

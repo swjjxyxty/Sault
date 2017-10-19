@@ -21,7 +21,7 @@ import static com.bestxty.sault.internal.handler.SaultTaskEventHandler.SAULT_TAS
  *         Created by 姜泰阳 on 2017/10/17.
  */
 @Singleton
-public class DefaultSaultTaskEventDispatcher implements SaultTaskEventDispatcher {
+class DefaultSaultTaskEventDispatcher implements SaultTaskEventDispatcher {
     private final Handler mainThreadHandler;
 
     @Inject

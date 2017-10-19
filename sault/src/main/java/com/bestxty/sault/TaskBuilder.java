@@ -1,9 +1,7 @@
-package com.bestxty.sault.task;
+package com.bestxty.sault;
 
 import android.net.Uri;
 
-import com.bestxty.sault.Callback;
-import com.bestxty.sault.Sault;
 import com.bestxty.sault.internal.task.DefaultSaultTask;
 import com.bestxty.sault.internal.task.SaultTask;
 
@@ -15,7 +13,7 @@ import static com.bestxty.sault.Sault.Priority;
  * @author xty
  *         Created by xty on 2016/12/9.
  */
-public class TaskBuilder {
+public final class TaskBuilder {
 
 
     private Uri uri;
@@ -27,7 +25,7 @@ public class TaskBuilder {
     private Boolean multiThreadEnabled = null;
     private Boolean breakPointEnabled = null;
 
-    public TaskBuilder(Sault sault, Uri uri) {
+    TaskBuilder(Sault sault, Uri uri) {
         this.sault = sault;
         this.uri = uri;
     }

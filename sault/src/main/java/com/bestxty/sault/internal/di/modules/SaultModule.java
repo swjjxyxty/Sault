@@ -7,17 +7,6 @@ import com.bestxty.sault.Downloader;
 import com.bestxty.sault.NetworkStatusProvider;
 import com.bestxty.sault.SaultConfiguration;
 import com.bestxty.sault.internal.DefaultNetworkStatusProvider;
-import com.bestxty.sault.internal.dispatcher.DefaultHunterEventDispatcher;
-import com.bestxty.sault.internal.dispatcher.DefaultSaultTaskEventDispatcher;
-import com.bestxty.sault.internal.dispatcher.DispatcherThread;
-import com.bestxty.sault.internal.dispatcher.HunterEventDispatcher;
-import com.bestxty.sault.internal.dispatcher.SaultTaskEventDispatcher;
-import com.bestxty.sault.internal.dispatcher.TaskRequestEventDispatcher;
-import com.bestxty.sault.internal.handler.DefaultEventHandler;
-import com.bestxty.sault.internal.handler.DefaultSaultTaskEventHandler;
-import com.bestxty.sault.internal.handler.HunterEventHandler;
-import com.bestxty.sault.internal.handler.SaultTaskEventHandler;
-import com.bestxty.sault.internal.handler.TaskRequestEventHandler;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
@@ -34,7 +23,7 @@ import dagger.Provides;
  *         Created by 姜泰阳 on 2017/10/17.
  */
 @Module
-public class SaultModule {
+public final class SaultModule {
 
     private final Context context;
     private final SaultConfiguration configuration;
@@ -108,7 +97,6 @@ public class SaultModule {
         return networkStatusProvider;
     }
 
-
     @Provides
     @Singleton
     @Named("mainLooper")
@@ -116,50 +104,5 @@ public class SaultModule {
         return Looper.getMainLooper();
     }
 
-    @Provides
-    @Singleton
-    @Named("internalLooper")
-    Looper provideInternalLooper(DispatcherThread dispatcherThread) {
-        dispatcherThread.start();
-        return dispatcherThread.getLooper();
-    }
-
-
-    @Singleton
-    @Provides
-    HunterEventDispatcher provideHunterEventDispatcher(DefaultHunterEventDispatcher defaultHunterEventDispatcher) {
-        return defaultHunterEventDispatcher;
-    }
-
-    @Singleton
-    @Provides
-    SaultTaskEventDispatcher provideSaultTaskEventDispatcher(DefaultSaultTaskEventDispatcher defaultSaultTaskEventDispatcher) {
-        return defaultSaultTaskEventDispatcher;
-    }
-
-    @Singleton
-    @Provides
-    TaskRequestEventDispatcher provideTaskRequestEventDispatcher(DefaultHunterEventDispatcher defaultHunterEventDispatcher) {
-        return defaultHunterEventDispatcher;
-    }
-
-    //
-    @Singleton
-    @Provides
-    HunterEventHandler provideHunterEventHandler(DefaultEventHandler defaultEventHandler) {
-        return defaultEventHandler;
-    }
-
-    @Singleton
-    @Provides
-    SaultTaskEventHandler provideSaultTaskEventHandler(DefaultSaultTaskEventHandler saultTaskEventHandler) {
-        return saultTaskEventHandler;
-    }
-
-    @Singleton
-    @Provides
-    TaskRequestEventHandler provideTaskRequestEventHandler(DefaultEventHandler defaultEventHandler) {
-        return defaultEventHandler;
-    }
 
 }

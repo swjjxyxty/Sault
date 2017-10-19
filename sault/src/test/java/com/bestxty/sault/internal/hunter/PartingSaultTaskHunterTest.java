@@ -9,7 +9,6 @@ import com.bestxty.sault.internal.Utils;
 import com.bestxty.sault.internal.di.components.SaultComponent;
 import com.bestxty.sault.internal.di.modules.HunterModule;
 import com.bestxty.sault.internal.di.modules.SaultModule;
-import com.bestxty.sault.internal.dispatcher.DefaultHunterEventDispatcher;
 import com.bestxty.sault.internal.dispatcher.HunterEventDispatcher;
 import com.bestxty.sault.internal.dispatcher.TaskRequestEventDispatcher;
 import com.bestxty.sault.internal.task.PartedSaultTask;
@@ -70,7 +69,7 @@ public class PartingSaultTaskHunterTest extends ApplicationTestCase {
     private Downloader downloader;
 
     @Mock
-    private DefaultHunterEventDispatcher defaultHunterEventDispatcher;
+    private HunterEventDispatcher defaultHunterEventDispatcher;
 
     @Before
     public void setUp() throws Exception {

@@ -24,7 +24,7 @@ import javax.inject.Singleton;
  *         Created by 姜泰阳 on 2017/10/13.
  */
 @Singleton
-public class DefaultEventHandler implements TaskRequestEventHandler, HunterEventHandler {
+class DefaultEventHandler implements TaskRequestEventHandler, HunterEventHandler {
 
     private final Map<Integer, TaskHunter> hunterMap = new ConcurrentHashMap<>();
     private final Map<String, List<SaultTask>> pausedTaskMap = new ConcurrentHashMap<>();
@@ -33,9 +33,9 @@ public class DefaultEventHandler implements TaskRequestEventHandler, HunterEvent
     private final SaultTaskEventDispatcher taskEventDispatcher;
 
     @Inject
-    public DefaultEventHandler(ExecutorService executorService,
-                               NetworkStatusProvider networkStatusProvider,
-                               SaultTaskEventDispatcher taskEventDispatcher) {
+    DefaultEventHandler(ExecutorService executorService,
+                        NetworkStatusProvider networkStatusProvider,
+                        SaultTaskEventDispatcher taskEventDispatcher) {
         this.executorService = executorService;
         this.networkStatusProvider = networkStatusProvider;
         this.taskEventDispatcher = taskEventDispatcher;

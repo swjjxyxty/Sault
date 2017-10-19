@@ -13,7 +13,7 @@ import dagger.Provides;
  *         Created by 姜泰阳 on 2017/10/17.
  */
 @Module
-public class HunterModule {
+public final class HunterModule {
 
     @Provides
     @Named("hunterSequence")

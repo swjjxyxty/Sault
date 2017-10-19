@@ -25,7 +25,7 @@ import static com.bestxty.sault.internal.handler.TaskRequestEventHandler.TASK_SU
  *         Created by 姜泰阳 on 2017/10/17.
  */
 @Singleton
-public class DefaultHunterEventDispatcher implements HunterEventDispatcher, TaskRequestEventDispatcher {
+class DefaultHunterEventDispatcher implements HunterEventDispatcher, TaskRequestEventDispatcher {
 
     private static final String TAG = "DefaultHunterEventDispatcher";
 
