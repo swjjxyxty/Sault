@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.nio.charset.Charset;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -97,7 +98,7 @@ public class DefaultSaultTaskHunterTest extends ApplicationTestCase {
 
         taskHunter = new DefaultSaultTaskHunter(task);
 
-        inputStream = new ByteArrayInputStream("test".getBytes());
+        inputStream = new ByteArrayInputStream("test".getBytes(Charset.forName("UTF-8")));
 
         MemberModifier.field(DefaultSaultTaskHunter.class, "downloader").set(taskHunter, downloader);
         MemberModifier.field(Downloader.Response.class, "stream").set(response, inputStream);

@@ -108,5 +108,21 @@ public class SaultExecutorService extends ThreadPoolExecutor {
             // Equal priorities are sorted by sequence number to provide FIFO ordering.
             return (p1 == p2 ? hunter.getSequence() - other.hunter.getSequence() : p2.ordinal() - p1.ordinal());
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SaultFutureTask that = (SaultFutureTask) o;
+
+            return hunter != null ? hunter.equals(that.hunter) : that.hunter == null;
+
+        }
+
+        @Override
+        public int hashCode() {
+            return hunter != null ? hunter.hashCode() : 0;
+        }
     }
 }

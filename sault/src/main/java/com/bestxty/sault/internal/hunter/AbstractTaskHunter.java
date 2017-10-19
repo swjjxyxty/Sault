@@ -110,4 +110,20 @@ abstract class AbstractTaskHunter implements TaskHunter {
             Thread.currentThread().setName(Utils.THREAD_IDLE_NAME);
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AbstractTaskHunter that = (AbstractTaskHunter) o;
+
+        return sequence == that.sequence;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return sequence;
+    }
 }

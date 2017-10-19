@@ -31,17 +31,13 @@ public class PartedSaultTaskTest extends ApplicationTestCase {
     @Mock
     private SaultTask task;
 
-    private Sault sault;
-
-    private SaultModule saultModule;
 
     private PartedSaultTask partedSaultTask;
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        sault = PowerMockito.mock(Sault.class);
-        saultModule = PowerMockito.mock(SaultModule.class);
+        Sault sault = PowerMockito.mock(Sault.class);
 
         SaultComponent saultComponent = Mockito.mock(SaultComponent.class);
 

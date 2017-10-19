@@ -69,6 +69,9 @@ public class InternalMainThreadHandler extends Handler {
             case SAULT_TASK_EXCEPTION:
                 saultTaskEventHandler.handleSaultTaskException(((SaultTask) msg.obj));
                 break;
+            default:
+                log(TAG, "unknown msg type : " + msg.what);
+                break;
         }
     }
 }

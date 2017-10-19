@@ -95,7 +95,7 @@ public class OkHttpDownloader implements Downloader {
             return -1L;
         }
 
-        return Long.valueOf(str);
+        return Long.parseLong(str);
 
     }
 

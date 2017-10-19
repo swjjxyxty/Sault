@@ -108,7 +108,8 @@ public class PartingSaultTaskHunterTest extends ApplicationTestCase {
 
     @After
     public void tearDown() throws Exception {
-        createDummyFile().delete();
+        boolean ignoredResult = createDummyFile().delete();
+        System.out.println("ignoredResult = " + ignoredResult);
     }
 
     @Test

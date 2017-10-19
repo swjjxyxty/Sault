@@ -80,6 +80,9 @@ public class InternalEventDispatcherHandler extends Handler {
             case HUNTER_FAILED:
                 hunterEventHandler.handleHunterFailed(((TaskHunter) msg.obj));
                 break;
+            default:
+                log(TAG, "unknown msg type : " + msg.what);
+                break;
         }
     }
 }
