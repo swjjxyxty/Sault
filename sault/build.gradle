@@ -55,7 +55,7 @@ publish {
     userOrg = 'xty'//bintray.com用户名
     groupId = 'com.bestxty.lib'//jcenter上的路径,要保持与之前导入到bintary中的package名一致
     artifactId = 'sault'//项目名称
-    publishVersion = '1.0.0'//版本号
+    publishVersion = '1.0.1'//版本号
     desc = 'this is a file download library.'//描述
     website = 'https://github.com/swjjxyxty/Sault'//填写之前上传到github后的地址
 }
