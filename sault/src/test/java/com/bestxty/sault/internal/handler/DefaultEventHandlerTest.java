@@ -5,7 +5,7 @@ import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 
 import com.bestxty.sault.ApplicationTestCase;
-import com.bestxty.sault.NetworkStatusProvider;
+import com.bestxty.sault.internal.NetworkStatusProvider;
 import com.bestxty.sault.internal.Utils;
 import com.bestxty.sault.internal.dispatcher.SaultTaskEventDispatcher;
 import com.bestxty.sault.internal.hunter.MockPartingSaultTaskHunterProvider;

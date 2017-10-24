@@ -4,8 +4,8 @@ import android.os.Handler;
 
 import com.bestxty.sault.ApplicationTestCase;
 import com.bestxty.sault.Sault;
-import com.bestxty.sault.internal.dispatcher.handler.InternalEventDispatcherHandler;
 import com.bestxty.sault.internal.handler.HunterEventHandler;
+import com.bestxty.sault.internal.handler.NetworkEventHandler;
 import com.bestxty.sault.internal.handler.TaskRequestEventHandler;
 import com.bestxty.sault.internal.hunter.TaskHunter;
 import com.bestxty.sault.internal.task.SaultTask;
@@ -47,6 +47,9 @@ public class InternalEventDispatcherHandlerTest extends ApplicationTestCase {
     private HunterEventHandler hunterEventHandler;
 
     @Mock
+    private NetworkEventHandler networkEventHandler;
+
+    @Mock
     private TaskHunter hunter;
 
     @Mock
@@ -61,7 +64,8 @@ public class InternalEventDispatcherHandlerTest extends ApplicationTestCase {
         when(task.getSault()).thenReturn(sault);
         when(hunter.getSault()).thenReturn(sault);
 
-        hunterHandler = new InternalEventDispatcherHandler(ShadowLooper.myLooper(), taskRequestEventHandler, hunterEventHandler);
+        hunterHandler = new InternalEventDispatcherHandler(ShadowLooper.myLooper(),
+                taskRequestEventHandler, hunterEventHandler, networkEventHandler);
     }
 
     @Test

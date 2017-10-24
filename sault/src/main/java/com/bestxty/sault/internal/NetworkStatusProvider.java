@@ -1,4 +1,4 @@
-package com.bestxty.sault;
+package com.bestxty.sault.internal;
 
 import android.net.NetworkInfo;
 

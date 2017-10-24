@@ -4,9 +4,9 @@ import android.content.Context;
 import android.os.Looper;
 
 import com.bestxty.sault.Downloader;
-import com.bestxty.sault.NetworkStatusProvider;
 import com.bestxty.sault.SaultConfiguration;
 import com.bestxty.sault.internal.DefaultNetworkStatusProvider;
+import com.bestxty.sault.internal.NetworkStatusProvider;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;

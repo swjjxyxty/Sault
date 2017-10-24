@@ -30,7 +30,7 @@ public class SaultExecutorService extends ThreadPoolExecutor {
     }
 
 
-    void adjustThreadCount(NetworkInfo info) {
+    public void adjustThreadCount(NetworkInfo info) {
         if (info == null || !info.isConnectedOrConnecting()) {
             setThreadCount(DEFAULT_THREAD_COUNT);
             return;

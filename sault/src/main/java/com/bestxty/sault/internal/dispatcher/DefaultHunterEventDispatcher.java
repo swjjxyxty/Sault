@@ -1,7 +1,9 @@
 package com.bestxty.sault.internal.dispatcher;
 
+import android.net.NetworkInfo;
 import android.os.Handler;
 
+import com.bestxty.sault.internal.NetworkStatusProvider;
 import com.bestxty.sault.internal.dispatcher.handler.InternalEventDispatcherHandler;
 import com.bestxty.sault.internal.hunter.TaskHunter;
 import com.bestxty.sault.internal.task.SaultTask;
@@ -15,6 +17,8 @@ import static com.bestxty.sault.internal.handler.HunterEventHandler.HUNTER_FAILE
 import static com.bestxty.sault.internal.handler.HunterEventHandler.HUNTER_FINISH;
 import static com.bestxty.sault.internal.handler.HunterEventHandler.HUNTER_RETRY;
 import static com.bestxty.sault.internal.handler.HunterEventHandler.HUNTER_START;
+import static com.bestxty.sault.internal.handler.NetworkEventHandler.AIRPLANE_MODE_CHANGE;
+import static com.bestxty.sault.internal.handler.NetworkEventHandler.NETWORK_CHANGE;
 import static com.bestxty.sault.internal.handler.TaskRequestEventHandler.TASK_CANCEL_REQUEST;
 import static com.bestxty.sault.internal.handler.TaskRequestEventHandler.TASK_PAUSE_REQUEST;
 import static com.bestxty.sault.internal.handler.TaskRequestEventHandler.TASK_RESUME_REQUEST;
@@ -25,15 +29,40 @@ import static com.bestxty.sault.internal.handler.TaskRequestEventHandler.TASK_SU
  *         Created by 姜泰阳 on 2017/10/17.
  */
 @Singleton
-class DefaultHunterEventDispatcher implements HunterEventDispatcher, TaskRequestEventDispatcher {
+class DefaultHunterEventDispatcher implements HunterEventDispatcher,
+        TaskRequestEventDispatcher, NetworkEventDispatcher, NetworkStatusProvider.NetworkStatusListener {
 
     private static final String TAG = "DefaultHunterEventDispatcher";
 
     private final Handler hunterHandler;
+    private final NetworkStatusProvider networkStatusProvider;
 
     @Inject
-    DefaultHunterEventDispatcher(InternalEventDispatcherHandler internalEventDispatcherHandler) {
-        hunterHandler = internalEventDispatcherHandler;
+    DefaultHunterEventDispatcher(InternalEventDispatcherHandler internalEventDispatcherHandler,
+                                 NetworkStatusProvider networkStatusProvider) {
+        this.hunterHandler = internalEventDispatcherHandler;
+        this.networkStatusProvider = networkStatusProvider;
+        this.networkStatusProvider.addNetworkStatusListener(this);
+    }
+
+    @Override
+    public void networkChange(NetworkInfo networkInfo) {
+        dispatchNetworkChange(networkInfo);
+    }
+
+    @Override
+    public void airplaneModeChange(boolean airplaneMode) {
+        dispatchAirplaneModeChange(airplaneMode);
+    }
+
+    @Override
+    public void dispatchAirplaneModeChange(boolean airplaneMode) {
+        hunterHandler.sendMessage(hunterHandler.obtainMessage(AIRPLANE_MODE_CHANGE, airplaneMode));
+    }
+
+    @Override
+    public void dispatchNetworkChange(NetworkInfo networkInfo) {
+        hunterHandler.sendMessage(hunterHandler.obtainMessage(NETWORK_CHANGE, networkInfo));
     }
 
     @Override
@@ -85,6 +114,7 @@ class DefaultHunterEventDispatcher implements HunterEventDispatcher, TaskRequest
 
     @Override
     public void shutdown() {
+        networkStatusProvider.removeNetworkStatusListener(this);
         if (hunterHandler == null) {
             return;
         }

@@ -120,7 +120,7 @@ public final class Sault {
     boolean multiThreadEnabled;
 
     @Inject
-    com.bestxty.sault.NetworkStatusProvider networkStatusProvider;
+    com.bestxty.sault.internal.NetworkStatusProvider networkStatusProvider;
 
     private volatile boolean shutdown = false;
 
@@ -249,6 +249,7 @@ public final class Sault {
             log(TAG, "shutdown sault instance.");
         }
         taskRequestEventDispatcher.shutdown();
+        networkStatusProvider.removeAllNetworkStatusListeners();
         ((DefaultNetworkStatusProvider) networkStatusProvider).unregister();
         taskMap.clear();
         shutdown = true;

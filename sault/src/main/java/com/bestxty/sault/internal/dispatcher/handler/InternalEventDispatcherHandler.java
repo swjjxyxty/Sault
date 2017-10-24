@@ -1,10 +1,12 @@
 package com.bestxty.sault.internal.dispatcher.handler;
 
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
 import com.bestxty.sault.internal.handler.HunterEventHandler;
+import com.bestxty.sault.internal.handler.NetworkEventHandler;
 import com.bestxty.sault.internal.handler.TaskRequestEventHandler;
 import com.bestxty.sault.internal.hunter.TaskHunter;
 import com.bestxty.sault.internal.task.SaultTask;
@@ -19,6 +21,8 @@ import static com.bestxty.sault.internal.handler.HunterEventHandler.HUNTER_FAILE
 import static com.bestxty.sault.internal.handler.HunterEventHandler.HUNTER_FINISH;
 import static com.bestxty.sault.internal.handler.HunterEventHandler.HUNTER_RETRY;
 import static com.bestxty.sault.internal.handler.HunterEventHandler.HUNTER_START;
+import static com.bestxty.sault.internal.handler.NetworkEventHandler.AIRPLANE_MODE_CHANGE;
+import static com.bestxty.sault.internal.handler.NetworkEventHandler.NETWORK_CHANGE;
 import static com.bestxty.sault.internal.handler.TaskRequestEventHandler.TASK_CANCEL_REQUEST;
 import static com.bestxty.sault.internal.handler.TaskRequestEventHandler.TASK_PAUSE_REQUEST;
 import static com.bestxty.sault.internal.handler.TaskRequestEventHandler.TASK_RESUME_REQUEST;
@@ -35,15 +39,18 @@ public class InternalEventDispatcherHandler extends Handler {
 
     private final TaskRequestEventHandler taskRequestEventHandler;
     private final HunterEventHandler hunterEventHandler;
+    private final NetworkEventHandler networkEventHandler;
     private final LoggingEnableResovler loggingEnableResovler;
 
     @Inject
     public InternalEventDispatcherHandler(@Named("internalLooper") Looper looper,
                                           TaskRequestEventHandler taskRequestEventHandler,
-                                          HunterEventHandler hunterEventHandler) {
+                                          HunterEventHandler hunterEventHandler,
+                                          NetworkEventHandler networkEventHandler) {
         super(looper);
         this.taskRequestEventHandler = taskRequestEventHandler;
         this.hunterEventHandler = hunterEventHandler;
+        this.networkEventHandler = networkEventHandler;
         this.loggingEnableResovler = new LoggingEnableResovler();
     }
 
@@ -79,6 +86,12 @@ public class InternalEventDispatcherHandler extends Handler {
                 break;
             case HUNTER_FAILED:
                 hunterEventHandler.handleHunterFailed(((TaskHunter) msg.obj));
+                break;
+            case AIRPLANE_MODE_CHANGE:
+                networkEventHandler.handleAirplaneModeChange((Boolean) msg.obj);
+                break;
+            case NETWORK_CHANGE:
+                networkEventHandler.handleNetworkChange((NetworkInfo) msg.obj);
                 break;
             default:
                 log(TAG, "unknown msg type : " + msg.what);

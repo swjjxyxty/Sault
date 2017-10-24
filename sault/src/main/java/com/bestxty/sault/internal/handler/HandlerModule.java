@@ -31,4 +31,11 @@ public final class HandlerModule {
         return defaultEventHandler;
     }
 
+
+    @Singleton
+    @Provides
+    NetworkEventHandler provideNetworkEventHandler(DefaultEventHandler defaultEventHandler) {
+        return defaultEventHandler;
+    }
+
 }

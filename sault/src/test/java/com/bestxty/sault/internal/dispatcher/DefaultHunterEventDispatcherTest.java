@@ -2,8 +2,10 @@ package com.bestxty.sault.internal.dispatcher;
 
 import com.bestxty.sault.ApplicationTestCase;
 import com.bestxty.sault.Sault;
+import com.bestxty.sault.internal.NetworkStatusProvider;
 import com.bestxty.sault.internal.dispatcher.handler.InternalEventDispatcherHandler;
 import com.bestxty.sault.internal.handler.HunterEventHandler;
+import com.bestxty.sault.internal.handler.NetworkEventHandler;
 import com.bestxty.sault.internal.handler.TaskRequestEventHandler;
 import com.bestxty.sault.internal.hunter.TaskHunter;
 import com.bestxty.sault.internal.task.SaultTask;
@@ -38,6 +40,12 @@ public class DefaultHunterEventDispatcherTest extends ApplicationTestCase {
     private HunterEventHandler hunterEventHandler;
 
     @Mock
+    private NetworkEventHandler networkEventHandler;
+
+    @Mock
+    private NetworkStatusProvider networkStatusProvider;
+
+    @Mock
     private TaskHunter taskHunter;
 
     @Mock
@@ -53,9 +61,9 @@ public class DefaultHunterEventDispatcherTest extends ApplicationTestCase {
         when(task.getSault()).thenReturn(sault);
         when(taskHunter.getSault()).thenReturn(sault);
         InternalEventDispatcherHandler handler = new InternalEventDispatcherHandler(ShadowLooper.myLooper(),
-                taskRequestEventHandler, hunterEventHandler);
-        hunterEventDispatcher = new DefaultHunterEventDispatcher(handler);
-        taskRequestEventDispatcher = new DefaultHunterEventDispatcher(handler);
+                taskRequestEventHandler, hunterEventHandler, networkEventHandler);
+        hunterEventDispatcher = new DefaultHunterEventDispatcher(handler, networkStatusProvider);
+        taskRequestEventDispatcher = new DefaultHunterEventDispatcher(handler, networkStatusProvider);
     }
 
     @Test

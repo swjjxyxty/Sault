@@ -2,7 +2,8 @@ package com.bestxty.sault.internal.handler;
 
 import android.net.NetworkInfo;
 
-import com.bestxty.sault.NetworkStatusProvider;
+import com.bestxty.sault.internal.NetworkStatusProvider;
+import com.bestxty.sault.internal.SaultExecutorService;
 import com.bestxty.sault.internal.dispatcher.SaultTaskEventDispatcher;
 import com.bestxty.sault.internal.hunter.TaskHunter;
 import com.bestxty.sault.internal.hunter.TaskHunterFactory;
@@ -24,13 +25,14 @@ import javax.inject.Singleton;
  *         Created by 姜泰阳 on 2017/10/13.
  */
 @Singleton
-class DefaultEventHandler implements TaskRequestEventHandler, HunterEventHandler {
+class DefaultEventHandler implements TaskRequestEventHandler, HunterEventHandler, NetworkEventHandler {
 
     private final Map<Integer, TaskHunter> hunterMap = new ConcurrentHashMap<>();
     private final Map<String, List<SaultTask>> pausedTaskMap = new ConcurrentHashMap<>();
     private final ExecutorService executorService;
     private final NetworkStatusProvider networkStatusProvider;
     private final SaultTaskEventDispatcher taskEventDispatcher;
+    private boolean isAirplaneMode = false;
 
     @Inject
     DefaultEventHandler(ExecutorService executorService,
@@ -39,8 +41,21 @@ class DefaultEventHandler implements TaskRequestEventHandler, HunterEventHandler
         this.executorService = executorService;
         this.networkStatusProvider = networkStatusProvider;
         this.taskEventDispatcher = taskEventDispatcher;
+        this.isAirplaneMode = networkStatusProvider.isAirplaneMode();
     }
 
+    @Override
+    public void handleAirplaneModeChange(boolean airplaneMode) {
+        this.isAirplaneMode = airplaneMode;
+    }
+
+    @Override
+    public void handleNetworkChange(NetworkInfo networkInfo) {
+        if (executorService instanceof SaultExecutorService) {
+            ((SaultExecutorService) executorService)
+                    .adjustThreadCount(networkInfo);
+        }
+    }
 
     @Override
     public void handleSaultTaskSubmitRequest(SaultTask task) {
@@ -110,8 +125,7 @@ class DefaultEventHandler implements TaskRequestEventHandler, HunterEventHandler
             networkInfo = networkStatusProvider.getNetworkInfo();
         }
         boolean hasConnectivity = networkInfo != null && networkInfo.isConnected();
-        boolean shouldRetryHunter = hunter.shouldRetry(networkStatusProvider.isAirplaneMode(),
-                networkInfo);
+        boolean shouldRetryHunter = hunter.shouldRetry(isAirplaneMode, networkInfo);
 
         if (!shouldRetryHunter) {
             removeSelfAndDispatchException(hunter);

@@ -7,8 +7,6 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import com.bestxty.sault.NetworkStatusProvider;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 

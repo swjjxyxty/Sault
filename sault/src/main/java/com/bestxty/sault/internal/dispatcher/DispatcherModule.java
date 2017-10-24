@@ -42,4 +42,10 @@ public final class DispatcherModule {
     TaskRequestEventDispatcher provideTaskRequestEventDispatcher(DefaultHunterEventDispatcher defaultHunterEventDispatcher) {
         return defaultHunterEventDispatcher;
     }
+
+    @Singleton
+    @Provides
+    NetworkEventDispatcher provideNetworkEventDispatcher(DefaultHunterEventDispatcher defaultHunterEventDispatcher) {
+        return defaultHunterEventDispatcher;
+    }
 }
